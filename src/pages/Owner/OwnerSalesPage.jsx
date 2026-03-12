@@ -56,15 +56,15 @@ export default function OwnerSalesPage() {
 
           <Table>
             <TableHeader>
-                          <TableRow className={"bg-accent"}>
-                    <TableHead className={"w-10"}>
-                      <div className="flex justify-center items-center h-full">
-                        <Input
-                          type={"checkbox"}
-                          className={"size-3.5 text-white"}
-                        />
-                      </div>
-                    </TableHead>
+              <TableRow className={"bg-accent"}>
+                <TableHead className={"w-10"}>
+                  <div className="flex justify-center items-center h-full">
+                    <Input
+                      type={"checkbox"}
+                      className={"size-3.5 text-white"}
+                    />
+                  </div>
+                </TableHead>
                 <TableHead>Id</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Branch</TableHead>
@@ -77,18 +77,30 @@ export default function OwnerSalesPage() {
             <TableBody>
               {filteredSales.map((st) => (
                 <TableRow key={st.sale_id}>
-                  <TableCell>
-                    {st.sale_id.slice(0, 8)}
+                  <TableCell className="font-medium">
+                    <div className="flex justify-center items-center h-full">
+                      <Input
+                        type={"checkbox"}
+                        className={"size-3 text-white"}
+                      />
+                    </div>
                   </TableCell>
+                  <TableCell>{st.sale_id.slice(0, 8)}</TableCell>
                   <TableCell>{st.created_at?.slice(0, 10)}</TableCell>
                   <TableCell>{st.branch_name}</TableCell>
                   <TableCell>{st.cashier_name}</TableCell>
                   <TableCell>{st.payment_method}</TableCell>
-                  <TableCell className={"flex flex-wrap"}>{st.items.map((item, idx) => (
-                      <span title={item.product_name} key={idx} className="mr-2 max-w-20 text-ellipsis overflow-hidden whitespace-nowrap">
-                      {item.product_name}
-                    </span>
-                  ))}</TableCell>
+                  <TableCell className={"flex flex-wrap"}>
+                    {st.items.map((item, idx) => (
+                      <span
+                        title={item.product_name}
+                        key={idx}
+                        className="mr-2 max-w-20 text-ellipsis overflow-hidden whitespace-nowrap"
+                      >
+                        {item.product_name}
+                      </span>
+                    ))}
+                  </TableCell>
                   <TableCell>{st.amount}</TableCell>
                 </TableRow>
               ))}
