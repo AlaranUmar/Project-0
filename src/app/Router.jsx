@@ -6,12 +6,14 @@ import LoginPage from "@/feautures/auth/LoginPage";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import CustomersPage from "@/pages/dashboard/CustomersPage";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
-import OrdersPage from "@/pages/dashboard/OrdersPage";
 import ProductsPage from "@/pages/dashboard/ProductsPage";
 import ReportsPage from "@/pages/dashboard/ReportsPage";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
 import PublicRoute from "@/components/shared/PublicRoute";
 import SalesPage from "@/pages/dashboard/SalesPage";
+import BranchesPage from "@/pages/dashboard/BranchesPage";
+import BranchDetailsPage from "@/pages/dashboard/BranchDetailsPage";
+import StaffsPage from "@/pages/dashboard/StaffsPage";
 
 function Router() {
   return (
@@ -24,8 +26,9 @@ function Router() {
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<ProductsPage />} />
-            <Route path="branches" element={<OrdersPage />} />
-            <Route path="staffs" element={<ReportsPage />} />
+            <Route path="branches" element={<BranchesPage />} />
+            <Route path="branches/:id" element={<BranchDetailsPage />} />
+            <Route path="staffs" element={<StaffsPage />} />
             <Route path="sales" element={<SalesPage />} />
             <Route path="customers" element={<CustomersPage />} />
             <Route path="transfers" element={<CustomersPage />} />

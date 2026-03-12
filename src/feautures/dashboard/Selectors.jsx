@@ -59,6 +59,31 @@ export function StaffSelector({ onChange }) {
   );
 }
 
+export function Paymentmethod({ onChange }) {
+  const [method, setMethod] = useState("cash");
+
+  function handleChange(value) {
+    setMethod(value);
+    onChange(value);
+  }
+
+  return (
+    <Select value={method} onValueChange={handleChange}>
+      <SelectTrigger className="w-30 md:w-45">
+        <SelectValue placeholder="Select method" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="cash">Cash</SelectItem>
+
+        <SelectItem value="pos">POS</SelectItem>
+
+        <SelectItem value="transfer">Transfer</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function LocationSelector({ onChange }) {
   const [range, setRange] = useState("today");
 

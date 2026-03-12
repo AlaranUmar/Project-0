@@ -162,8 +162,8 @@ function Product({ product }) {
           <Input type={"checkbox"} className={"size-3 text-white"} />
         </div>
       </TableCell>
-      <TableCell className="font-medium overflow-hidden text-right max-w-20">
-        <p>{product.product_id}</p>
+      <TableCell className="font-medium">
+        <p>{product.product_id.slice(0,8)}</p>
       </TableCell>
       <TableCell>{product.product_name}</TableCell>
       <TableCell>${product.price}</TableCell>

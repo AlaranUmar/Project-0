@@ -8,10 +8,10 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 function DashboardLayout() {
+  const { user, role } = useAuth();
   async function handleLogout() {
     await logoutUser();
   }
-  const { user, role } = useAuth();
   const [page, setPage] = useState(null);
   return (
     <SidebarProvider>

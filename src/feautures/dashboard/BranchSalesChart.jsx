@@ -16,6 +16,8 @@ function BranchSalesChart() {
     { name: "Wed", kuto: 2000, okejigbo: 8000, okelewo: 6500 },
     { name: "Thu", kuto: 2780, okejigbo: 3908, okelewo: 5000 },
     { name: "Fri", kuto: 1890, okejigbo: 4800, okelewo: 2400 },
+    { name: "Sat", kuto: 2312, okejigbo: 1345, okelewo: 3245 },
+    { name: "Sun", kuto: 4567, okejigbo: 4800, okelewo: 6789 },
   ];
   return (
     <div className="h-9/10 w-full">

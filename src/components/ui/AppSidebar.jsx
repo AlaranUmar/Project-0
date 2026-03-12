@@ -13,20 +13,27 @@ import {
 import { User2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { SidebarCloseButton } from "./sidebarCloseButton";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { sidebarMenu } from "@/feautures/dashboard/sideBarMenu";
 
 function AppSidebar({ username, role, setPage }) {
   const location = useLocation();
+    const navItems = useMemo(() => {
+    return sidebarMenu[role] || [];
+  }, [role]);
   useEffect(() => {
-    const title =
-      location.pathname === "/"
-        ? "Dashboard"
-        : location.pathname.slice(1).toUpperCase();
-    setPage(title);
-  }, [location.pathname, setPage]);
-  const navItems = sidebarMenu[role] || [];
+    const currentItem = navItems.find((item) => item.path === location.pathname);
 
+    if (currentItem) {
+      setPage(currentItem.name);
+    } 
+    else if (location.pathname.startsWith("/branches/")) {
+      setPage("Branch Details");
+    } 
+    else {
+      setPage("Dashboard");
+    }
+  }, [location.pathname, navItems, setPage]);
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader>
@@ -38,7 +45,7 @@ function AppSidebar({ username, role, setPage }) {
           <SidebarGroupContent>
             <SidebarMenu className={"space-y-3"}>
               {navItems.map((item, index) => {
-                const isActive = location.pathname === item.url;
+                const isActive = location.pathname === item.path;
                 return (
                   <SidebarMenuItem key={index}>
                     <SidebarMenuButton asChild isActive={isActive}>
@@ -62,7 +69,7 @@ function AppSidebar({ username, role, setPage }) {
                 <User2 className="text-white" size={40} />
               </div>
               <div className="flex flex-col">
-                <p className="font-semibold">{username}</p>
+                <p className="font-semibold truncate overflow-hidden max-w-40">{username}</p>
                 <span className="capitalize bg-primary/80 text-white px-2 py-0.5 rounded-2xl w-fit text-xs ">
                   {role}
                 </span>
