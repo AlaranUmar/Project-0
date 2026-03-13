@@ -35,12 +35,6 @@ export default function OwnerReportPage() {
     fetchReport();
   }, [dateRange]);
   if (loading) return <div>Loading...</div>;
-  const expenseRevenueData = report
-    .filter((b) => b.branch_type === "branch")
-    .map((b) => ({
-      date: b.branch_name,
-      sales: b.total_sales,
-    }));
   const totalSales = report.reduce((acc, b) => acc + (b.total_sales || 0), 0);
   const totalExpenses = report.reduce(
     (acc, b) => acc + (b.total_expenses || 0),
@@ -123,66 +117,52 @@ export default function OwnerReportPage() {
             </CardContent>
           </Card>
         </div>
-        <div className="grid md:grid-cols-4 gap-3">
-          <ReportsChart data={daily} />
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Branch Sales</CardTitle>
-            </CardHeader>
-            <CardContent className="px-0 pr-8">
-              <div className="w-full h-64">
-                <BranchSalesChart data={expenseRevenueData} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <h2 className="text-2xl font-semibold text-gray-700 mt-8">
-        Branch Performance
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {report.map((branch) => (
-          <Card key={branch.branch_id}>
-            <CardHeader>
-              <CardTitle className="text-lg capitalize">
-                {branch.branch_name}
-              </CardTitle>
-            </CardHeader>
-            <Separator />
-            <CardContent className="space-y-2">
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Staff:</span>{" "}
-                {branch.total_staff}
-              </p>
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Products:</span>{" "}
-                {branch.total_products}
-              </p>
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Inventory Value:</span> ₦
-                {branch.inventory_value?.toLocaleString()}
-              </p>
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Sales:</span> ₦
-                {branch.total_sales?.toLocaleString()}
-              </p>
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Expenses:</span> ₦
-                {branch.total_expenses?.toLocaleString()}
-              </p>
-              <p className="flex justify-between font-bold tracking-wide">
-                <span className="font-semibold">Net Profit:</span> ₦
-                {(branch.total_sales - branch.total_expenses)?.toLocaleString()}
-              </p>
-              {branch.low_stock_items > 0 && (
-                <p className="text-red-600 font-semibold">
-                  ⚠ Low Stock: {branch.low_stock_items} items
+        <div className="grid md:grid-cols-5 gap-3">
+          {report.map((branch) => (
+            <Card key={branch.branch_id} className="col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg capitalize">
+                  {branch.branch_name} ({branch.branch_type})
+                </CardTitle>
+              </CardHeader>
+              <Separator />
+              <CardContent className="space-y-2">
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Staff:</span>{" "}
+                  {branch.total_staff}
                 </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Products:</span>{" "}
+                  {branch.total_products}
+                </p>
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Inventory Value:</span> ₦
+                  {branch.inventory_value?.toLocaleString()}
+                </p>
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Sales:</span> ₦
+                  {branch.total_sales?.toLocaleString()}
+                </p>
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Expenses:</span> ₦
+                  {branch.total_expenses?.toLocaleString()}
+                </p>
+                <p className="flex justify-between font-bold tracking-wide">
+                  <span className="font-semibold">Net Profit:</span> ₦
+                  {(
+                    branch.total_sales - branch.total_expenses
+                  )?.toLocaleString()}
+                </p>
+                {branch.low_stock_items > 0 && (
+                  <p className="text-red-600 font-semibold">
+                    ⚠ Low Stock: {branch.low_stock_items} items
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          <ReportsChart data={daily} />
+        </div>
       </div>
     </div>
   );

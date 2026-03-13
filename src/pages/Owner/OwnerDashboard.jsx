@@ -18,7 +18,18 @@ function OwnerDashboard() {
         <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Sales</CardTitle>
+              <CardTitle className="text-sm">Total Sales Count</CardTitle>
+
+              {/* <DollarSign size={18} /> */}
+            </CardHeader>
+
+            <CardContent>
+              <div className="text-xl font-bold">4,230</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Total Inventory Value</CardTitle>
 
               <DollarSign size={18} />
             </CardHeader>
@@ -29,9 +40,9 @@ function OwnerDashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Sales</CardTitle>
+              <CardTitle className="text-sm">Total Profit</CardTitle>
 
-              <DollarSign size={18} />
+              {/* <DollarSign size={18} /> */}
             </CardHeader>
 
             <CardContent>
@@ -40,24 +51,13 @@ function OwnerDashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Sales</CardTitle>
+              <CardTitle className="text-sm">Total Products</CardTitle>
 
-              <DollarSign size={18} />
+              {/* <DollarSign size={18} /> */}
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">$4,200</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Sales</CardTitle>
-
-              <DollarSign size={18} />
-            </CardHeader>
-
-            <CardContent>
-              <div className="text-xl font-bold">$4,200</div>
+              <div className="text-xl font-bold">4,200</div>
             </CardContent>
           </Card>
         </div>

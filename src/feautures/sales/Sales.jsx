@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function getSales() {
   const { data, error } = await supabase
-    .from("sales_with_items")
+    .from("sales_with_items")   
     .select("*")
     .order("created_at", { ascending: false });
 

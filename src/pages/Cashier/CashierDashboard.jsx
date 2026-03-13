@@ -7,14 +7,50 @@ import PopularProducts from "./PopularProducts";
 import OutOfStock from "./OutOfStock";
 import ProductSearch from "@/components/ProductSearch";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
+import { getSales } from "@/feautures/sales/Sales";
 
 function CashierDashboard({ profile }) {
   const [time, setTime] = useState(new Date());
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  useEffect(() => {
+    const fetchChartData = async () => {
+      const data = await getSales();
+
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dailyMap = {};
+
+      const last7Days = [...Array(7)]
+        .map((_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return days[d.getDay()];
+        })
+        .reverse();
+
+      last7Days.forEach((day) => (dailyMap[day] = 0));
+
+      data.forEach((sale) => {
+        const saleDay = days[new Date(sale.created_at).getDay()];
+        if (dailyMap[saleDay] !== undefined) {
+          dailyMap[saleDay] += sale.amount;
+        }
+      });
+
+      const formattedData = last7Days.map((day) => ({
+        name: day,
+        sales: dailyMap[day],
+      }));
+
+      setChartData(formattedData);
+    };
+    fetchChartData();
+  }, []);
+
   return (
     <div className="px-3 py-2 flex flex-col gap-3">
       <header className="flex">
@@ -47,7 +83,7 @@ function CashierDashboard({ profile }) {
           </CardHeader>
           <CardContent className="px-0 pr-8">
             <div className="w-full h-50">
-              <SalesChartCashier />
+              <SalesChartCashier data={chartData} />
             </div>
           </CardContent>
         </Card>
@@ -63,3 +99,5 @@ function CashierDashboard({ profile }) {
 }
 
 export default CashierDashboard;
+
+

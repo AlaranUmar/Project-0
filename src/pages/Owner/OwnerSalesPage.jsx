@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { getSales } from "@/feautures/sales/Sales";
+import { DollarSign } from "lucide-react";
 export default function OwnerSalesPage() {
   const [sales, setSales] = useState([]);
   const [search, setSearch] = useState("");
@@ -34,11 +35,54 @@ export default function OwnerSalesPage() {
       s.sale_id?.toLowerCase().includes(search?.toLowerCase()) ||
       s.cashier_name?.toLowerCase().includes(search?.toLowerCase()) ||
       s.product_name?.toLowerCase().includes(search?.toLowerCase()) ||
+      s.branch_name?.toLowerCase().includes(search?.toLowerCase()) ||
       s.transaction_type?.toLowerCase().includes(search?.toLowerCase()),
   );
 
   return (
     <div className="p-1 md:p-4 space-y-4">
+      <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Transfer Revenue</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">$4,200</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Cash Revenue</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">$4,200</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total POS Revenue</CardTitle>
+
+            <DollarSign size={18} />
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">$4,200</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Revenue</CardTitle>
+
+            <DollarSign size={18} />
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">$4,200</div>
+          </CardContent>
+        </Card>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Sales Management</CardTitle>
@@ -46,12 +90,11 @@ export default function OwnerSalesPage() {
         <CardContent>
           <div className="flex items-center mb-4">
             <Input
-              placeholder="Search staff by name, branch or role"
+              placeholder="Search sales by ID, cashier name, product name, or branch"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 mr-2"
             />
-            <Button>Add Staff</Button>
           </div>
 
           <Table>

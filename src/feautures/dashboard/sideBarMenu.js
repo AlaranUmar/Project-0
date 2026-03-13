@@ -32,12 +32,13 @@ export const sidebarMenu = {
     { name: "Reports", path: "/reports", icon: BarChart3 },
     { name: "Settings", path: "/settings", icon: Settings },
   ],
-
+  
   manager: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: Package },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
+    { name: "Reports", path: "/reports", icon: BarChart3 },
   ],
 
   cashier: [

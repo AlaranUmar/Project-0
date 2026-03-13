@@ -5,3 +5,54 @@ export async function getProducts() {
   if (error) throw error;
   return data;
 }
+export async function getCategories() {
+  const { data, error } = await supabase.from("categories").select("*");
+  if (error) throw error;
+  return data;
+}
+export async function getLocations() {
+  const { data, error } = await supabase.from("locations").select("*");
+  if (error) throw error;
+  return data;
+}
+export async function getTags() {
+  const { data, error } = await supabase.from("tags").select("*");
+  if (error) throw error;
+  return data;
+}
+
+export async function createCategory(name) {
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({ name })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createTag(name) {
+  const { data, error } = await supabase
+    .from("tags")
+    .insert({ name })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createProduct(product) {
+  const { data, error } = await supabase.rpc("create_product_with_stock", {
+    p_name: product.name,
+    p_price: product.price,
+    p_cost: product.cost_price,
+    p_category: product.category_id,
+    p_reorder: product.reorder_level,
+    p_location: product.location_id,
+    p_stock: product.initial_stock,
+  });
+
+  if (error) throw error;
+
+  return data;
+}

@@ -37,30 +37,29 @@ function BranchesPage() {
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Revenue</CardTitle>
+              <CardTitle className="text-sm">Total Branches</CardTitle>
             </CardHeader>
 
             <CardContent>
               <div className="text-sm md:text-lg font-semibold">
-                ₦ 444,200,00.00
+                5
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Expense</CardTitle>
+              <CardTitle className="text-sm">Inventory Value</CardTitle>
             </CardHeader>
 
             <CardContent>
               <div className="text-sm md:text-lg font-semibold">
-                {" "}
                 ₦ 444,200.00
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Branches</CardTitle>
+              <CardTitle className="text-sm">Branches With Low Stock</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -69,11 +68,11 @@ function BranchesPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Products</CardTitle>
+              <CardTitle className="text-sm">Branches Out Of Stock</CardTitle>
             </CardHeader>
 
             <CardContent>
-              <div className="text-lg font-semibold">245</div>
+              <div className="text-lg font-semibold">4</div>
             </CardContent>
           </Card>
         </div>

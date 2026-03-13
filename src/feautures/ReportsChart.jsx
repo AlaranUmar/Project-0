@@ -1,76 +1,67 @@
-
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts"
-
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  XAxis,
+} from "recharts";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-
-export const description = "A stacked bar chart with a legend"
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
+} from "@/components/ui/chart";
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  sales: {
+    label: "Revenue",
     color: "var(--chart-1)",
   },
-  mobile: {
-    label: "Mobile",
+  expenses: {
+    label: "Expenses",
     color: "var(--chart-2)",
   },
-}
+};
 
-export function ReportsChart() {
+export function ReportsChart({ data }) {
   return (
-    <Card className={"col-span-1 md:col-span-2"}>
+    <Card className="col-span-1 md:col-span-3">
       <CardHeader>
-        <CardTitle>Bar Chart - Stacked + Legend</CardTitle>
-      </CardHeader> 
+        <CardTitle>Revenue vs Expenses</CardTitle>
+      </CardHeader>
+
       <CardContent>
-        {/* Set a min-height here so the chart doesn't collapse to 0px */}
-        <ChartContainer config={chartConfig} className="h-50 w-full">
+        <ChartContainer config={chartConfig} className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart accessibilityLayer data={chartData}>
+            <BarChart data={data}>
               <CartesianGrid vertical={false} />
+
               <XAxis
-                dataKey="month"
+                dataKey="date"
                 tickLine={false}
-                tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
+                tickMargin={10}
               />
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+
+              <ChartTooltip content={<ChartTooltipContent />} />
+
               <ChartLegend content={<ChartLegendContent />} />
+
               <Bar
-                dataKey="desktop"
+                dataKey="sales"
                 stackId="a"
-                fill="var(--color-desktop)"
+                fill="var(--color-sales)"
                 radius={[0, 0, 4, 4]}
               />
+
               <Bar
-                dataKey="mobile"
+                dataKey="expenses"
                 stackId="a"
-                fill="var(--color-mobile)"
+                fill="var(--color-expenses)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

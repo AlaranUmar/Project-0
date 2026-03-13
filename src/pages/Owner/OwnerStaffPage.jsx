@@ -31,9 +31,7 @@ export default function OwnerStaffPage() {
 
   const filteredStaff = staff.filter(
     (s) =>
-      `${s.full_name}`
-        ?.toLowerCase()
-        .includes(search?.toLowerCase()) ||
+      `${s.full_name}`?.toLowerCase().includes(search?.toLowerCase()) ||
       s.branch_name?.toLowerCase().includes(search?.toLowerCase()) ||
       s.email?.toLowerCase().includes(search?.toLowerCase()) ||
       s.user_role?.toLowerCase().includes(search?.toLowerCase()),
@@ -41,6 +39,48 @@ export default function OwnerStaffPage() {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Total Staffs</CardTitle>
+                  </CardHeader>
+      
+                  <CardContent>
+                    <div className="text-sm md:text-lg font-semibold">
+                      5
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Active Staffs</CardTitle>
+                  </CardHeader>
+      
+                  <CardContent>
+                    <div className="text-sm md:text-lg font-semibold">
+                      5
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Total Managers</CardTitle>
+                  </CardHeader>
+      
+                  <CardContent>
+                    <div className="text-lg font-semibold">5</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Total Branches</CardTitle>
+                  </CardHeader>
+      
+                  <CardContent>
+                    <div className="text-lg font-semibold">4</div>
+                  </CardContent>
+                </Card>
+              </div>
       <Card>
         <CardHeader>
           <CardTitle>Staff Management</CardTitle>
@@ -53,7 +93,6 @@ export default function OwnerStaffPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 mr-2"
             />
-            <Button>Add Staff</Button>
           </div>
 
           <Table>
@@ -70,12 +109,8 @@ export default function OwnerStaffPage() {
             <TableBody>
               {filteredStaff.map((st) => (
                 <TableRow key={st.staff_id}>
-                  <TableCell>
-                    {st.staff_id.slice(0,8)}
-                  </TableCell>
-                  <TableCell>
-                    {st.full_name}
-                  </TableCell>
+                  <TableCell>{st.staff_id.slice(0, 8)}</TableCell>
+                  <TableCell>{st.full_name}</TableCell>
                   <TableCell>{st.user_role}</TableCell>
                   <TableCell>{st.branch_name}</TableCell>
                   <TableCell>{st.email}</TableCell>

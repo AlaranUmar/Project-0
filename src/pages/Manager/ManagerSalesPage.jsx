@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { Search, Receipt } from "lucide-react";
 
-function CashierSalesPage() {
+function ManagerSalesPage() {
   const [sales, setSales] = useState([]);
   const [query, setQuery] = useState("");
 
@@ -31,8 +31,8 @@ function CashierSalesPage() {
     const q = query.toLowerCase();
 
     return sales.filter((sale) => {
-      const matchesId = sale.sale_id?.toLowerCase().includes(q);
-      const matchesCashier = sale.cashier_name?.toLowerCase().includes(q);
+        const matchesId = sale.sale_id?.toLowerCase().includes(q);
+        const matchesCashier = sale.cashier_name?.toLowerCase().includes(q);
       const matchesProduct = sale.items?.some((item) =>
         item.product_name?.toLowerCase().includes(q),
       );
@@ -40,7 +40,7 @@ function CashierSalesPage() {
       return matchesId || matchesCashier || matchesProduct;
     });
   }, [query, sales]);
-
+  console.log(sales)
   const formatCurrency = (value) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -60,7 +60,7 @@ function CashierSalesPage() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by sale ID, cashier or product..."
+            placeholder="Search by sale ID or product..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-10"
@@ -118,7 +118,6 @@ function CashierSalesPage() {
                       <p className="font-semibold text-lg">
                         {formatCurrency(sale.amount)}
                       </p>
-
                       <Badge variant="outline">
                         {sale.cashier_name || "Cashier"}
                       </Badge>
@@ -152,4 +151,4 @@ function CashierSalesPage() {
   );
 }
 
-export default CashierSalesPage;
+export default ManagerSalesPage;
