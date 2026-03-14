@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 export async function getBranches() {
   const { data, error } = await supabase.from("branch_staff_view").select("*");
   if (error) throw error;
-  return {data};
+  return { data };
 }
 export async function getBranchDetails(id) {
   // 1. Fetch summary
@@ -14,7 +14,6 @@ export async function getBranchDetails(id) {
     .single();
 
   if (summaryError) throw summaryError;
-
 
   const [rev, exp, stock] = await Promise.all([
     supabase.rpc("get_branch_revenue", { p_location_id: id }),

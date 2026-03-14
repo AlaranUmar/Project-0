@@ -17,7 +17,11 @@ import { getProducts } from "@/feautures/products/productService";
 import { Badge } from "@/components/ui/badge";
 // import LocationSelector from "@/feautures/dashboard/Selectors/LocationSelector";
 import CategorySelection from "@/feautures/dashboard/CategorySelection";
-import { AddCategoryDialog, AddProductDialog, AddTagDialog } from "../dashboard/ProductDialog";
+import {
+  AddCategoryDialog,
+  AddProductDialog,
+  AddTagDialog,
+} from "../dashboard/ProductDialog";
 export default function OwnerProductsPage() {
   const [products, setProducts] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -25,7 +29,6 @@ export default function OwnerProductsPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
 
-  // Handle success
   const handleCategoryAdd = (newCategory) => {
     // maybe refresh CategorySelection
     console.log("New category:", newCategory);
@@ -43,8 +46,7 @@ export default function OwnerProductsPage() {
     }
     loadProducts();
   }, []);
-
-  // Filtered products based on search
+  console.log(products);
   const filteredProducts = useMemo(() => {
     if (!query) return products;
 
@@ -70,47 +72,80 @@ export default function OwnerProductsPage() {
   };
 
   return (
-    <div className="p-3">
-      {/* Product Summary Cards */}
-      <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4 mb-6">
-        {["Total Products", "Products Sold", "Low Stock", "Out of Stock"].map((title, i) => (
-          <Card key={i}>
-            <CardHeader className="flex justify-between items-center">
-              <CardTitle className="text-sm">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">4,200</div>
-            </CardContent>
-          </Card>
-        ))}
+    <div className="p-1 md:p-4 space-y-4">
+      <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Products</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">{products.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Out Of Stock</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">
+              {products.filter((p) => p.quantity === 0).length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Low Stock</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">
+              {products.filter((p) => p.quantity <= p.reorder_level).length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Inventory Value</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-xl font-bold">
+              {products
+                .reduce((acc, p) => acc + p.price * p.stock_quantity, 0)
+                .toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Products Table */}
       <Card>
         <CardHeader className="flex flex-col gap-2">
           <div className="flex justify-between items-center w-full">
-            <CardTitle>Products</CardTitle>
-            <Button onClick={() => setIsDialogOpen(true)}>Add Product</Button>
-            <AddProductDialog
-              isOpen={isDialogOpen}
-              onClose={() => setIsDialogOpen(false)}
-              onSuccess={handleAddSuccess}
-            />
-            <Button onClick={() => setIsCategoryDialogOpen(true)}>
-              Add Category
-            </Button>
-            <AddCategoryDialog
-              isOpen={isCategoryDialogOpen}
-              onClose={() => setIsCategoryDialogOpen(false)}
-              onSuccess={handleCategoryAdd}
-            />
-
-            <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
-            <AddTagDialog
-              isOpen={isTagDialogOpen}
-              onClose={() => setIsTagDialogOpen(false)}
-              onSuccess={handleTagAdd}
-            />
+            <CardTitle className={"hidden sm:block"}>Products</CardTitle>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Button onClick={() => setIsDialogOpen(true)}>Add Product</Button>
+              <AddProductDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                onSuccess={handleAddSuccess}
+              />
+              <Button onClick={() => setIsCategoryDialogOpen(true)}>
+                Add Category
+              </Button>
+              <AddCategoryDialog
+                isOpen={isCategoryDialogOpen}
+                onClose={() => setIsCategoryDialogOpen(false)}
+                onSuccess={handleCategoryAdd}
+              />
+              <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
+              <AddTagDialog
+                isOpen={isTagDialogOpen}
+                onClose={() => setIsTagDialogOpen(false)}
+                onSuccess={handleTagAdd}
+              />
+            </div>
           </div>
 
           {/* Filters */}
@@ -206,7 +241,7 @@ function ProductRow({ product }) {
         </div>
       </TableCell>
       <TableCell>{product_id?.slice(0, 8)}</TableCell>
-      <TableCell>{product_name}</TableCell>
+      <TableCell className={" max-w-28 truncate"}>{product_name}</TableCell>
       <TableCell>${price}</TableCell>
       <TableCell>{category_name?.toUpperCase()}</TableCell>
       <TableCell>{tags?.length ? tags.join(", ") : "NULL"}</TableCell>

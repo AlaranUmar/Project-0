@@ -42,17 +42,23 @@ export async function createTag(name) {
 }
 
 export async function createProduct(product) {
-  const { data, error } = await supabase.rpc("create_product_with_stock", {
-    p_name: product.name,
-    p_price: product.price,
-    p_cost: product.cost_price,
-    p_category: product.category_id,
-    p_reorder: product.reorder_level,
-    p_location: product.location_id,
-    p_stock: product.initial_stock,
-  });
+  try {
+    const { data, error } = await supabase.rpc("create_product_with_stock", {
+      p_name: product.name,
+      p_price: product.price,
+      p_cost: product.cost_price,
+      p_category: product.category_id,
+      p_reorder: product.reorder_level || 12,
+      p_location: product.location_id,
+      p_stock: product.initial_stock || 0,
+      p_tags: product.tags || [],
+    });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data;
+    return data[0];
+  } catch (err) {
+    console.error("Error creating product:", err);
+    throw err;
+  }
 }

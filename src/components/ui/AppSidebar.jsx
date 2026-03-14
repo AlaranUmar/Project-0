@@ -15,22 +15,21 @@ import { Link, useLocation } from "react-router-dom";
 import { SidebarCloseButton } from "./sidebarCloseButton";
 import { useEffect, useMemo } from "react";
 import { sidebarMenu } from "@/feautures/dashboard/sideBarMenu";
-
 function AppSidebar({ username, role, setPage }) {
   const location = useLocation();
-    const navItems = useMemo(() => {
+  const navItems = useMemo(() => {
     return sidebarMenu[role] || [];
   }, [role]);
   useEffect(() => {
-    const currentItem = navItems.find((item) => item.path === location.pathname);
+    const currentItem = navItems.find(
+      (item) => item.path === location.pathname,
+    );
 
     if (currentItem) {
       setPage(currentItem.name);
-    } 
-    else if (location.pathname.startsWith("/branches/")) {
+    } else if (location.pathname.startsWith("/branches/")) {
       setPage("Branch Details");
-    } 
-    else {
+    } else {
       setPage("Dashboard");
     }
   }, [location.pathname, navItems, setPage]);
@@ -69,7 +68,9 @@ function AppSidebar({ username, role, setPage }) {
                 <User2 className="text-white" size={40} />
               </div>
               <div className="flex flex-col">
-                <p className="font-semibold truncate overflow-hidden max-w-40">{username}</p>
+                <p className="font-semibold truncate overflow-hidden max-w-40">
+                  {username}
+                </p>
                 <span className="capitalize bg-primary/80 text-white px-2 py-0.5 rounded-2xl w-fit text-xs ">
                   {role}
                 </span>

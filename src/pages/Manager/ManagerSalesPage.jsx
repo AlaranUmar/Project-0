@@ -31,8 +31,8 @@ function ManagerSalesPage() {
     const q = query.toLowerCase();
 
     return sales.filter((sale) => {
-        const matchesId = sale.sale_id?.toLowerCase().includes(q);
-        const matchesCashier = sale.cashier_name?.toLowerCase().includes(q);
+      const matchesId = sale.sale_id?.toLowerCase().includes(q);
+      const matchesCashier = sale.cashier_name?.toLowerCase().includes(q);
       const matchesProduct = sale.items?.some((item) =>
         item.product_name?.toLowerCase().includes(q),
       );
@@ -40,7 +40,7 @@ function ManagerSalesPage() {
       return matchesId || matchesCashier || matchesProduct;
     });
   }, [query, sales]);
-  console.log(sales)
+  console.log(sales);
   const formatCurrency = (value) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",

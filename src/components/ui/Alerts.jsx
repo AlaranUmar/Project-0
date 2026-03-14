@@ -11,7 +11,6 @@ function Alerts() {
   useEffect(() => {
     async function fetchAlerts() {
       const data = await getRecentAlerts();
-      console.log(data);
       setAlerts(data);
     }
     fetchAlerts();

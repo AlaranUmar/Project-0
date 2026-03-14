@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import {
   Select,
   SelectContent,
@@ -8,104 +7,73 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function DateRangeSelector({ onChange }) {
-  const [range, setRange] = useState("today");
+// A reusable base component to keep your code DRY
+const CustomSelect = ({
+  value,
+  onChange,
+  placeholder,
+  options,
+  className = "w-30 md:w-45",
+}) => (
+  <Select value={value} onValueChange={onChange}>
+    <SelectTrigger className={className}>
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+    <SelectContent>
+      {options.map((opt) => (
+        <SelectItem key={opt.value} value={opt.value}>
+          {opt.label}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+);
 
-  function handleChange(value) {
-    setRange(value);
-    onChange(value);
-  }
+export function DateRangeSelector({ value, onChange }) {
+  const options = [
+    { value: "today", label: "Today" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" },
+    { value: "total", label: "Total" },
+  ];
 
-  return (
-    <Select value={range} onValueChange={handleChange}>
-      <SelectTrigger className="w-30 md:w-45">
-        <SelectValue placeholder="Select range" />
-      </SelectTrigger>
-
-      <SelectContent>
-        <SelectItem value="today">Today</SelectItem>
-
-        <SelectItem value="week">This Week</SelectItem>
-
-        <SelectItem value="month">This Month</SelectItem>
-        <SelectItem value="month">Total</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-export function StaffSelector({ onChange }) {
-  const [range, setRange] = useState("today");
-
-  function handleChange(value) {
-    setRange(value);
-    onChange(value);
-  }
-
-  return (
-    <Select value={range} onValueChange={handleChange}>
-      <SelectTrigger className="w-30 md:w-45">
-        <SelectValue placeholder="Select range" />
-      </SelectTrigger>
-
-      <SelectContent>
-        <SelectItem value="s">sssss</SelectItem>
-
-        <SelectItem value="q">qqqqq</SelectItem>
-
-        <SelectItem value="month">This Month</SelectItem>
-        <SelectItem value="month">Total</SelectItem>
-      </SelectContent>
-    </Select>
-  );
+  return <CustomSelect value={value} onChange={onChange} options={options} />;
 }
 
-export function Paymentmethod({ onChange }) {
+export function LocationSelector({ value, onChange, branches = [] }) {
+  const options = [
+    { value: "all", label: "All Branches" },
+    ...branches.map((b) => ({
+      value: b.branch_id,
+      label: b.branch_name,
+    })),
+  ];
+
+  return (
+    <CustomSelect
+      value={value}
+      onChange={onChange}
+      placeholder="Select Branch"
+      options={options}
+    />
+  );
+}
+
+export function PaymentMethodSelector({ onChange }) {
   const [method, setMethod] = useState("cash");
-
-  function handleChange(value) {
-    setMethod(value);
-    onChange(value);
-  }
-
+  const options = [
+    { value: "cash", label: "Cash" },
+    { value: "pos", label: "POS" },
+    { value: "transfer", label: "Transfer" },
+  ];
   return (
-    <Select value={method} onValueChange={handleChange}>
-      <SelectTrigger className="w-30 md:w-45">
-        <SelectValue placeholder="Select method" />
-      </SelectTrigger>
-
-      <SelectContent>
-        <SelectItem value="cash">Cash</SelectItem>
-
-        <SelectItem value="pos">POS</SelectItem>
-
-        <SelectItem value="transfer">Transfer</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
-export function LocationSelector({ onChange }) {
-  const [range, setRange] = useState("today");
-
-  function handleChange(value) {
-    setRange(value);
-    onChange(value);
-  }
-
-  return (
-    <Select value={range} onValueChange={handleChange}>
-      <SelectTrigger className="w-30 md:w-45">
-        <SelectValue placeholder="Select range" />
-      </SelectTrigger>
-
-      <SelectContent>
-        <SelectItem value="today">All Branches</SelectItem>
-
-        <SelectItem value="week">Kuto</SelectItem>
-
-        <SelectItem value="month">Okejigbo</SelectItem>
-        <SelectItem value="okelewo">Okelewo</SelectItem>
-      </SelectContent>
-    </Select>
+    <CustomSelect
+      value={method}
+      onChange={(v) => {
+        setMethod(v);
+        onChange(v);
+      }}
+      options={options}
+    />
   );
 }

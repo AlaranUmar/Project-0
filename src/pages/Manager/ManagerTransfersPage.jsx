@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient"; // your supabase client
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +17,7 @@ import {
   handle_receive,
 } from "@/feautures/transfer/transferService";
 
-export default function OwnerTransfersPage() {
+export default function ManagerTransfersPage() {
   const [transfers, setTransfers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState({});

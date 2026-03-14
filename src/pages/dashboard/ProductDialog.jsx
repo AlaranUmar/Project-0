@@ -71,14 +71,14 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
         cost_price: Number(form.cost_price),
         initial_stock: Number(form.initial_stock),
         reorder_level: Number(form.reorder_level),
-        tags: selectedTags,
+        tags: selectedTags, // <-- send tags array to backend
         stocks: [
           {
             location_id: form.location_id,
             quantity: Number(form.initial_stock),
           },
         ],
-        createdBy: currentUserId, // used for stock movements
+        createdBy: currentUserId, // optional, for stock movement
       };
 
       const newProduct = await createProduct(payload);

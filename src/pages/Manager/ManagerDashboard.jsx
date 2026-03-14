@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RecentStockMovement from "@/components/ui/RecentStockMovement";
 import {
   DateRangeSelector,
-  StaffSelector,
+  // StaffSelector,
 } from "@/feautures/dashboard/Selectors";
+
 import { DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSales, sumSales } from "@/feautures/sales/Sales";
@@ -26,7 +27,7 @@ function ManagerDashboard() {
       <div className="flex flex-col gap-3">
         <div className="flex justify-between md:justify-end gap-2">
           <DateRangeSelector />
-          <StaffSelector />
+          {/* <StaffSelector /> */}
         </div>
         <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>

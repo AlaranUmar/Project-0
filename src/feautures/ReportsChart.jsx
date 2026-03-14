@@ -17,11 +17,11 @@ import {
 } from "@/components/ui/chart";
 
 const chartConfig = {
-  sales: {
+  revenue: {
     label: "Revenue",
     color: "var(--chart-1)",
   },
-  expenses: {
+  expense: {
     label: "Expenses",
     color: "var(--chart-2)",
   },
@@ -29,7 +29,7 @@ const chartConfig = {
 
 export function ReportsChart({ data }) {
   return (
-    <Card className="col-span-1 md:col-span-3">
+    <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle>Revenue vs Expenses</CardTitle>
       </CardHeader>
@@ -41,7 +41,7 @@ export function ReportsChart({ data }) {
               <CartesianGrid vertical={false} />
 
               <XAxis
-                dataKey="date"
+                dataKey="branch"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
@@ -52,16 +52,16 @@ export function ReportsChart({ data }) {
               <ChartLegend content={<ChartLegendContent />} />
 
               <Bar
-                dataKey="sales"
+                dataKey="revenue"
                 stackId="a"
-                fill="var(--color-sales)"
+                fill="var(--color-revenue)"
                 radius={[0, 0, 4, 4]}
               />
 
               <Bar
-                dataKey="expenses"
+                dataKey="expense"
                 stackId="a"
-                fill="var(--color-expenses)"
+                fill="var(--color-expense)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

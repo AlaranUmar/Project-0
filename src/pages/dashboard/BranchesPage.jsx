@@ -1,16 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import { Button } from "@/components/ui/button";
-import { LocationSelector } from "@/feautures/dashboard/Selectors";
-import { useEffect, useMemo, useState } from "react";
-import { getBranches } from "@/feautures/branches/branchService";
+import {
+  DateRangeSelector,
+  LocationSelector,
+} from "@/feautures/dashboard/Selectors";
+import { useMemo, useState } from "react";
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
+import { getDateRange } from "@/feautures/branches/getDate";
+import { useReports } from "@/context/ReportContext";
 function BranchesPage() {
-  const [branches, setBranches] = useState([]);
+  const [dateRange, setDateRange] = useState("today");
+  const [startDate, endDate] = getDateRange(dateRange);
+
   const [query, setQuery] = useState("");
+  const [branch, setBranch] = useState("all");
+  const { branches, totalInventoryValue, loading, branchSalesData } =
+    useReports(startDate, endDate, "owner", branch);
+
   const filteredBranches = useMemo(() => {
     if (!query) return branches;
 
@@ -18,22 +28,23 @@ function BranchesPage() {
 
     return branches.filter(
       (p) =>
-        p.branch_name.toLowerCase().includes(q) ||
-        p.address.toLowerCase().includes(q) ||
-        p.type?.toLowerCase().includes(q) ||
-        p.manager.name?.toLowerCase().includes(q),
+        p.branch_name?.toLowerCase().includes(q) ||
+        p.branch_address?.toLowerCase().includes(q) ||
+        p.branch_type?.toLowerCase().includes(q),
     );
   }, [query, branches]);
-  useEffect(() => {
-    async function fetchBranch() {
-      const { data } = await getBranches();
-      setBranches(data);
-    }
-    fetchBranch();
-  }, []);
+  const totalBranches = branches.length;
+
+  const branchesLowStock = branches.filter((b) => b.low_stock_items > 0).length;
+
+  const branchesOutOfStock = branches.filter(
+    (b) => b.out_of_stock_items > 0,
+  ).length;
+  if (loading) return <div>Loading...</div>;
   return (
     <div className="md:p-3">
       <div className="flex flex-col gap-3">
+        <DateRangeSelector onChange={setDateRange} value={dateRange} />
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -42,7 +53,7 @@ function BranchesPage() {
 
             <CardContent>
               <div className="text-sm md:text-lg font-semibold">
-                5
+                {totalBranches}
               </div>
             </CardContent>
           </Card>
@@ -53,7 +64,7 @@ function BranchesPage() {
 
             <CardContent>
               <div className="text-sm md:text-lg font-semibold">
-                ₦ 444,200.00
+                ₦ {totalInventoryValue.toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -63,7 +74,7 @@ function BranchesPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-lg font-semibold">5</div>
+              <div className="text-lg font-semibold">{branchesLowStock}</div>
             </CardContent>
           </Card>
           <Card>
@@ -72,18 +83,18 @@ function BranchesPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-lg font-semibold">4</div>
+              <div className="text-lg font-semibold">{branchesOutOfStock}</div>
             </CardContent>
           </Card>
         </div>
         <div className="grid grid-cols-1  gap-3">
-          <Card className=" w-full">
+          <Card className="md:col-span-3 w-full">
             <CardHeader>
-              <CardTitle>Expense and Revenue Chart</CardTitle>
+              <CardTitle>Branch Sales Chart</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pr-8">
               <div className="w-full h-64">
-                <BranchSalesChart />
+                <BranchSalesChart data={branchSalesData} />
               </div>
             </CardContent>
           </Card>
@@ -95,26 +106,26 @@ function BranchesPage() {
                 {" "}
                 <span className="text-lg">Branches</span>
                 <Input
-                  placeholder="Search branches by name, address, manager..."
+                  placeholder="Search branches by name, address..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className={"max-w-90"}
                 />
-                <LocationSelector />
+                <LocationSelector onChange={setBranch} branches={branches} />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className={"h-60"}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-2">
+                  {console.log(branches)}
                   {filteredBranches.map((branch) => (
                     <BranchCard
-                      key={branch.location_id}
-                      id={branch.location_id}
+                      key={branch.branch_id}
+                      id={branch.branch_id}
                       name={branch.branch_name}
-                      type={branch.type}
-                      manager={branch.manager}
-                      address={branch.address}
-                      cashiers={branch.cashiers}
+                      type={branch.branch_type}
+                      address={branch.branch_address}
+                      total_staff={branch.total_staff}
                     />
                   ))}
                 </div>
@@ -127,7 +138,7 @@ function BranchesPage() {
   );
 }
 
-function BranchCard({ name, type, manager, id, address, cashiers }) {
+function BranchCard({ name, type, id, address, total_staff }) {
   const navigate = useNavigate();
   return (
     <Card className={"bg-gray-50 shadow-accent shadow-md"}>
@@ -144,16 +155,16 @@ function BranchCard({ name, type, manager, id, address, cashiers }) {
       </CardHeader>
       <CardContent className={"space-y-2"}>
         <p className="flex justify-between">
-          <span className="text-sm text-gray-700">Manager:</span>
-          <span className="text-gray-800 font-semibold">{manager.name}</span>
-        </p>
-        <p className="flex justify-between">
           <span className="text-sm text-gray-700">Address:</span>
-          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">{address}</span>
+          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+            {address}
+          </span>
         </p>
         <p className="flex justify-between">
-          <span className="text-sm text-gray-700">Cashier No:</span>
-          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">{cashiers.length}</span>
+          <span className="text-sm text-gray-700">Staff No:</span>
+          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+            {total_staff}
+          </span>
         </p>
       </CardContent>
     </Card>

@@ -30,14 +30,22 @@ export default function OwnerSalesPage() {
       </div>
     );
   }
-  const filteredSales = sales.filter(
-    (s) =>
-      s.sale_id?.toLowerCase().includes(search?.toLowerCase()) ||
-      s.cashier_name?.toLowerCase().includes(search?.toLowerCase()) ||
-      s.product_name?.toLowerCase().includes(search?.toLowerCase()) ||
-      s.branch_name?.toLowerCase().includes(search?.toLowerCase()) ||
-      s.transaction_type?.toLowerCase().includes(search?.toLowerCase()),
-  );
+
+  console.log(sales);
+  // const totalSales = sales.length;
+  // const totalManagers = sales.filter(
+  //   (s) => s.user_role.toLowerCase() === "manager",
+  // ).length;
+  // const totalBranches = [...new Set(sales.map((s) => s.branch_name))].length;
+
+  // const query = search.toLowerCase();
+  // const filteredSales = sales.filter(
+  //   (s) =>
+  //     s.full_name?.toLowerCase().includes(query) ||
+  //     s.branch_name?.toLowerCase().includes(query) ||
+  //     s.email?.toLowerCase().includes(query) ||
+  //     s.user_role?.toLowerCase().includes(query),
+  // );
 
   return (
     <div className="p-1 md:p-4 space-y-4">
@@ -118,7 +126,7 @@ export default function OwnerSalesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSales.map((st) => (
+              {/* {filteredSales.map((st) => (
                 <TableRow key={st.sale_id}>
                   <TableCell className="font-medium">
                     <div className="flex justify-center items-center h-full">
@@ -146,7 +154,7 @@ export default function OwnerSalesPage() {
                   </TableCell>
                   <TableCell>{st.amount}</TableCell>
                 </TableRow>
-              ))}
+              ))} */}
             </TableBody>
           </Table>
         </CardContent>
