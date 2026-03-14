@@ -90,7 +90,7 @@ export default function OwnerProductsPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              {products.filter((p) => p.quantity === 0).length}
+              {products.filter((p) => p.stock_quantity === 0).length}
             </div>
           </CardContent>
         </Card>
@@ -101,7 +101,10 @@ export default function OwnerProductsPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              {products.filter((p) => p.quantity <= p.reorder_level).length}
+              {
+                products.filter((p) => p.stock_quantity <= p.reorder_level)
+                  .length
+              }
             </div>
           </CardContent>
         </Card>
