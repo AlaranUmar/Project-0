@@ -27,7 +27,6 @@ export default function OwnerStaffPage() {
       </div>
     );
   }
-  console.log(staff);
   const totalStaff = staff.length;
   const totalManagers = staff.filter(
     (s) => s.user_role.toLowerCase() === "manager",

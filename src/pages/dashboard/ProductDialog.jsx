@@ -64,6 +64,7 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       const payload = {
         ...form,
@@ -71,22 +72,41 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
         cost_price: Number(form.cost_price),
         initial_stock: Number(form.initial_stock),
         reorder_level: Number(form.reorder_level),
-        tags: selectedTags, // <-- send tags array to backend
+        tags: selectedTags,
         stocks: [
           {
             location_id: form.location_id,
             quantity: Number(form.initial_stock),
           },
         ],
-        createdBy: currentUserId, // optional, for stock movement
+        createdBy: currentUserId,
       };
 
-      const newProduct = await createProduct(payload);
+      // 1️⃣ create product
+      const createdProduct = await createProduct(payload);
 
-      onSuccess?.(newProduct); // Notify parent to update table
+      // 2️⃣ fetch full product row so table structure matches
+      const fullProduct = {
+        product_id: createdProduct.product_id,
+        product_name: form.name,
+        price: payload.price,
+        category_name:
+          categories.find((c) => c.id === form.category_id)?.name || "",
+        location_name:
+          locations.find((l) => l.id === form.location_id)?.name || "",
+        stock_quantity: payload.initial_stock,
+        reorder_level: payload.reorder_level,
+        tags: tags
+          .filter((t) => selectedTags.includes(t.id))
+          .map((t) => t.name),
+      };
+
+      // 3️⃣ send to parent table
+      onSuccess?.(fullProduct);
+
       setForm(initialForm);
       setSelectedTags([]);
-      onClose?.(); // Close dialog
+      onClose?.();
     } catch (err) {
       alert(err.message || "Failed to create product");
     } finally {

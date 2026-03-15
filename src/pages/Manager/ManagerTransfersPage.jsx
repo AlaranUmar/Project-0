@@ -28,9 +28,9 @@ export default function ManagerTransfersPage({ profile }) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [openRequest, setOpenRequest] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [loadingIds, setLoadingIds] = useState([]); // per-transfer loading
 
-  // Fetch all initial data
+  // Fetch initial data
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -38,7 +38,6 @@ export default function ManagerTransfersPage({ profile }) {
         getTransfers(),
         getProducts(),
       ]);
-
       setTransfers(transfersData || []);
       setProducts(productsData || []);
 
@@ -68,50 +67,78 @@ export default function ManagerTransfersPage({ profile }) {
     [transfers],
   );
 
-  // Debounced search filtering
+  // Filtered transfers
   const filteredTransfers = useMemo(() => {
     const term = search.toLowerCase();
     return transfers.filter(
       (t) =>
         t.id.toLowerCase().includes(term) ||
-        t.status.toLowerCase().includes(term) ||
-        t.from_branch?.toLowerCase().includes(term) ||
-        t.to_branch?.toLowerCase().includes(term),
+        (t.status?.toLowerCase() || "").includes(term) ||
+        (t.from_branch?.toLowerCase() || "").includes(term) ||
+        (t.to_branch?.toLowerCase() || "").includes(term),
     );
   }, [transfers, search]);
 
   // Dispatch transfer
   const handleDispatch = async (transferId) => {
-    setActionLoading(true);
+    setLoadingIds((prev) => [...prev, transferId]);
     try {
       await handle_dispatch(transferId);
-      fetchData();
+      setTransfers((prev) =>
+        prev.map((t) =>
+          t.id === transferId ? { ...t, status: "dispatched" } : t,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => prev.filter((id) => id !== transferId));
     }
   };
 
   // Receive transfer
   const handleReceive = async (transferId) => {
-    setActionLoading(true);
+    setLoadingIds((prev) => [...prev, transferId]);
     try {
       await handle_receive(transferId);
-      fetchData();
+      setTransfers((prev) =>
+        prev.map((t) =>
+          t.id === transferId ? { ...t, status: "completed" } : t,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => prev.filter((id) => id !== transferId));
     }
   };
 
-  // Request a new transfer
   const handleRequestTransfer = async (items) => {
     if (!branchId) return;
-    setActionLoading(true);
+    setLoadingIds((prev) => [...prev, "request"]);
     try {
-      await handle_request(branchId, items);
+      await handle_request(branchId, items); // send request to backend
       setOpenRequest(false);
-      fetchData();
+
+      // Create a temporary transfer object to add immediately
+      const tempTransfer = {
+        id: "tmp_" + Date.now(), // temporary unique ID
+        status: "approved", // default status for new request
+        from_location_id: branchId, // your branch
+        to_location_id: branchId, // adjust if needed
+        items: items.map((i) => ({
+          product_id: i.id,
+          product_name: i.name,
+          quantity: i.quantity,
+        })),
+      };
+
+      // Add it to the top of the list
+      setTransfers((prev) => [tempTransfer, ...prev]);
+    } catch (err) {
+      console.error(err);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => prev.filter((id) => id !== "request"));
     }
   };
 
@@ -141,8 +168,11 @@ export default function ManagerTransfersPage({ profile }) {
             onClick={() =>
               branchId ? setOpenRequest(true) : alert("Branch info loading...")
             }
+            disabled={loadingIds.includes("request")}
           >
-            Request Transfer
+            {loadingIds.includes("request")
+              ? "Requesting..."
+              : "Request Transfer"}
           </Button>
         </CardHeader>
         <CardContent>
@@ -166,8 +196,6 @@ export default function ManagerTransfersPage({ profile }) {
               <TableHeader>
                 <TableRow className="bg-accent text-white">
                   <TableHead>Transfer ID</TableHead>
-                  <TableHead>From Branch</TableHead>
-                  <TableHead>To Branch</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Items</TableHead>
                   <TableHead>Actions</TableHead>
@@ -179,17 +207,18 @@ export default function ManagerTransfersPage({ profile }) {
                     <TableCell className="font-mono">
                       {t.id.slice(0, 8)}
                     </TableCell>
-                    <TableCell>{t.from_branch || "-"}</TableCell>
-                    <TableCell>{t.to_branch}</TableCell>
                     <TableCell className="capitalize">{t.status}</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {t.items.map((item) => (
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                        {(t.items || []).map((item) => (
                           <span
                             key={item.product_id}
-                            className="px-2 py-1 bg-secondary rounded text-[10px]"
+                            className="px-2 py-1 bg-secondary rounded text-[10px] flex items-center"
                           >
-                            {item.product_name} ({item.quantity})
+                            <p className="truncate max-w-40 inline-block">
+                              {item.product_name}
+                            </p>
+                            ({item.quantity})
                           </span>
                         ))}
                       </div>
@@ -200,9 +229,11 @@ export default function ManagerTransfersPage({ profile }) {
                           <Button
                             size="sm"
                             onClick={() => handleDispatch(t.id)}
-                            disabled={actionLoading}
+                            disabled={loadingIds.includes(t.id)}
                           >
-                            Dispatch
+                            {loadingIds.includes(t.id)
+                              ? "Dispatching..."
+                              : "Dispatch"}
                           </Button>
                         )}
                       {t.status === "dispatched" &&
@@ -210,9 +241,11 @@ export default function ManagerTransfersPage({ profile }) {
                           <Button
                             size="sm"
                             onClick={() => handleReceive(t.id)}
-                            disabled={actionLoading}
+                            disabled={loadingIds.includes(t.id)}
                           >
-                            Receive
+                            {loadingIds.includes(t.id)
+                              ? "Receiving..."
+                              : "Receive"}
                           </Button>
                         )}
                     </TableCell>

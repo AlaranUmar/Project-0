@@ -16,7 +16,7 @@ function Alerts() {
     fetchAlerts();
   }, []);
   return (
-    <Card>
+    <Card className={"h-full"}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
@@ -27,8 +27,8 @@ function Alerts() {
         </Badge>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-sm px-4">
-          <div className="flex flex-col gap-3 pb-4">
+        <ScrollArea className="max-h-80 px-4">
+          <div className="flex flex-col gap-3">
             {alerts?.length > 0 ? (
               alerts.map((alert) => (
                 <Alert

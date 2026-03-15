@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabaseClient";
 export async function getTransfers() {
   const { data, error } = await supabase.from("transfers_overview").select("*");
   if (error) console.error(error);
-  console.log(data);
   return data;
 }
 
@@ -22,7 +21,18 @@ export async function approveTransfer(transferId, items = [], sourceBranchId) {
 
   if (error) {
     console.error("Approve transfer error:", error);
-    throw error; // Throw so the UI can handle the error
+    throw error;
+  }
+}
+
+export async function rejectTransfer(transferId) {
+  const { error } = await supabase.rpc("reject_transfer", {
+    p_transfer_id: transferId,
+  });
+
+  if (error) {
+    console.error("Reject transfer error:", error);
+    throw error;
   }
 }
 

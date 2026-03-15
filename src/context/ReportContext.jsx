@@ -68,10 +68,12 @@ export function useReports(
           (acc, b) => acc + (b.inventory_value || 0),
           0,
         );
-        const branchSalesData = filteredData.map((b) => ({
-          branch: b.branch_name,
-          sales: b.total_sales || 0,
-        }));
+        const branchSalesData = filteredData
+          .filter((b) => b.branch_type !== "warehouse")
+          .map((b) => ({
+            branch: b.branch_name,
+            sales: b.total_sales || 0,
+          }));
         const revenueExpenseData = filteredData.map((b) => ({
           branch: b.branch_name,
           revenue: b.total_sales || 0,

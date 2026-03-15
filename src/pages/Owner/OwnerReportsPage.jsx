@@ -13,7 +13,6 @@ import {
 export default function OwnerReportPage() {
   const [dateRange, setDateRange] = useState("today");
   const [startDate, endDate] = getDateRange(dateRange);
-  const [branch, setBranch] = useState("all");
   const reportRef = useRef();
   // const { data, daily, loading } = useReports(startDate, endDate, "owner");
   const {
@@ -25,14 +24,9 @@ export default function OwnerReportPage() {
     totalExpense,
     loading,
     branches,
-  } = useReports(startDate, endDate, "owner", branch);
+  } = useReports(startDate, endDate, "owner");
 
   if (loading) return <div>Loading...</div>;
-  // const expenseRevenueData = data?.map((b) => ({
-  //   date: b.location_name,
-  //   sales: b.total_sales,
-  //   expenses: b.total_expenses,
-  // }));
 
   return (
     <div className="p-2 md:p-4 space-y-6" ref={reportRef}>
@@ -40,11 +34,6 @@ export default function OwnerReportPage() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex justify-between w-full">
             <DateRangeSelector onChange={setDateRange} value={dateRange} />
-            <LocationSelector
-              value={branch}
-              onChange={setBranch}
-              branches={branches}
-            />
           </div>
         </div>
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">

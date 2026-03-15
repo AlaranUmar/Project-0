@@ -117,7 +117,6 @@ function BranchesPage() {
             <CardContent>
               <ScrollArea className={"h-60"}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-2">
-                  {console.log(branches)}
                   {filteredBranches.map((branch) => (
                     <BranchCard
                       key={branch.branch_id}
@@ -148,9 +147,18 @@ function BranchCard({ name, type, id, address, total_staff }) {
             <span className="capitalize">{name}</span>
             <span className="text-gray-600">{type}</span>
           </p>
-          <Button variant="link" onClick={() => navigate(`/branches/${id}`)}>
-            View Details
-          </Button>
+          {type === "warehouse" ? (
+            <Button
+              variant="link"
+              onClick={() => navigate(`/warehouses/${id}`)}
+            >
+              View Details
+            </Button>
+          ) : (
+            <Button variant="link" onClick={() => navigate(`/branches/${id}`)}>
+              View Details
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className={"space-y-2"}>

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 export async function getProducts() {
   const { data, error } = await supabase.from("product_view").select("*");
   if (error) throw error;
+  console.log(data);
   return data;
 }
 export async function getCategories() {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,16 @@ export default function OwnerSalesPage() {
   const [sales, setSales] = useState([]);
   const [search, setSearch] = useState("");
 
+  const filteredSales = useMemo(() => {
+    const term = search.toLowerCase();
+    return sales.filter(
+      (sale) =>
+        sale.sale_id.toLowerCase().includes(term) ||
+        sale.cashier_name.toLowerCase().includes(term) ||
+        sale.items.some((p) => p.product_name.toLowerCase().includes(term)) ||
+        sale.branch_name.toLowerCase().includes(term),
+    );
+  }, [sales, search]);
   useEffect(() => {
     async function fetchSales() {
       const data = await getSales();
@@ -30,22 +40,19 @@ export default function OwnerSalesPage() {
       </div>
     );
   }
-
-  console.log(sales);
-  // const totalSales = sales.length;
-  // const totalManagers = sales.filter(
-  //   (s) => s.user_role.toLowerCase() === "manager",
-  // ).length;
-  // const totalBranches = [...new Set(sales.map((s) => s.branch_name))].length;
-
-  // const query = search.toLowerCase();
-  // const filteredSales = sales.filter(
-  //   (s) =>
-  //     s.full_name?.toLowerCase().includes(query) ||
-  //     s.branch_name?.toLowerCase().includes(query) ||
-  //     s.email?.toLowerCase().includes(query) ||
-  //     s.user_role?.toLowerCase().includes(query),
-  // );
+  const totalTransferRevenue = sales.reduce(
+    (sum, sale) => sum + (sale.payment_method === "transfer" ? sale.amount : 0),
+    0,
+  );
+  const totalCashRevenue = sales.reduce(
+    (sum, sale) => sum + (sale.payment_method === "cash" ? sale.amount : 0),
+    0,
+  );
+  const totalPOSRevenue = sales.reduce(
+    (sum, sale) => sum + (sale.payment_method === "pos" ? sale.amount : 0),
+    0,
+  );
+  const totalRevenue = sales.reduce((sum, sale) => sum + sale.amount, 0);
 
   return (
     <div className="p-1 md:p-4 space-y-4">
@@ -56,7 +63,9 @@ export default function OwnerSalesPage() {
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">$4,200</div>
+            <div className="text-xl font-bold">
+              ${totalTransferRevenue.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -65,7 +74,9 @@ export default function OwnerSalesPage() {
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">$4,200</div>
+            <div className="text-xl font-bold">
+              ${totalCashRevenue.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -76,7 +87,9 @@ export default function OwnerSalesPage() {
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">$4,200</div>
+            <div className="text-xl font-bold">
+              ${totalPOSRevenue.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -87,7 +100,9 @@ export default function OwnerSalesPage() {
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">$4,200</div>
+            <div className="text-xl font-bold">
+              ${totalRevenue.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -121,44 +136,61 @@ export default function OwnerSalesPage() {
                 <TableHead>Branch</TableHead>
                 <TableHead>Cashier Name</TableHead>
                 <TableHead>Paid with</TableHead>
-                <TableHead>Products</TableHead>
+                <TableHead>items</TableHead>
                 <TableHead>Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* {filteredSales.map((st) => (
-                <TableRow key={st.sale_id}>
-                  <TableCell className="font-medium">
-                    <div className="flex justify-center items-center h-full">
-                      <Input
-                        type={"checkbox"}
-                        className={"size-3 text-white"}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell>{st.sale_id.slice(0, 8)}</TableCell>
-                  <TableCell>{st.created_at?.slice(0, 10)}</TableCell>
-                  <TableCell>{st.branch_name}</TableCell>
-                  <TableCell>{st.cashier_name}</TableCell>
-                  <TableCell>{st.payment_method}</TableCell>
-                  <TableCell className={"flex flex-wrap"}>
-                    {st.items.map((item, idx) => (
-                      <span
-                        title={item.product_name}
-                        key={idx}
-                        className="mr-2 max-w-20 text-ellipsis overflow-hidden whitespace-nowrap"
-                      >
-                        {item.product_name}
-                      </span>
-                    ))}
-                  </TableCell>
-                  <TableCell>{st.amount}</TableCell>
-                </TableRow>
-              ))} */}
+              {filteredSales.map((sale) => (
+                <SalesRow key={sale.sale_id} sale={sale} />
+              ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SalesRow({ sale }) {
+  const {
+    sale_id,
+    created_at,
+    branch_name,
+    cashier_name,
+    payment_method,
+    items,
+    amount,
+  } = sale;
+  return (
+    <TableRow key={sale_id} className={"hover:bg-gray-50"}>
+      <TableCell className={"font-mono"}>
+        {" "}
+        <div className="flex justify-center items-center h-full">
+          <Input type={"checkbox"} className={"size-3.5 text-white"} />
+        </div>
+      </TableCell>
+      <TableCell className={"font-mono"}>{sale_id.slice(0, 8)}</TableCell>
+      <TableCell>{new Date(created_at).toLocaleString()}</TableCell>
+      <TableCell>{branch_name}</TableCell>
+      <TableCell>{cashier_name}</TableCell>
+      <TableCell className="capitalize">{payment_method}</TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {items.map((p) => (
+            <span
+              key={p.product_name}
+              className="px-2 py-1 bg-secondary rounded text-[10px] space-x-1 flex items-center max-w-30"
+            >
+              <p className="truncate max-w-30 text-ellipsis inline-block">
+                {p.product_name}
+              </p>
+              ({p.quantity})
+            </span>
+          ))}
+        </div>
+      </TableCell>
+      <TableCell>${amount.toLocaleString()}</TableCell>
+    </TableRow>
   );
 }

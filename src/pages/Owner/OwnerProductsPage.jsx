@@ -15,29 +15,24 @@ import { DollarSign, Edit } from "lucide-react";
 
 import { getProducts } from "@/feautures/products/productService";
 import { Badge } from "@/components/ui/badge";
-// import LocationSelector from "@/feautures/dashboard/Selectors/LocationSelector";
 import CategorySelection from "@/feautures/dashboard/CategorySelection";
 import {
   AddCategoryDialog,
   AddProductDialog,
   AddTagDialog,
 } from "../dashboard/ProductDialog";
+
 export default function OwnerProductsPage() {
   const [products, setProducts] = useState([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
 
-  const handleCategoryAdd = (newCategory) => {
-    // maybe refresh CategorySelection
-    console.log("New category:", newCategory);
-  };
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const handleTagAdd = (newTag) => {
-    // maybe refresh your tag selection
-    console.log("New tag:", newTag);
-  };
   // Load products
   useEffect(() => {
     async function loadProducts() {
@@ -46,6 +41,7 @@ export default function OwnerProductsPage() {
     }
     loadProducts();
   }, []);
+
   const filteredProducts = useMemo(() => {
     if (!query) return products;
 
@@ -56,6 +52,7 @@ export default function OwnerProductsPage() {
       const category = p.category_name?.toLowerCase() || "";
       const location = p.location_name?.toLowerCase() || "";
       const tags = (p.tags || []).join(" ").toLowerCase();
+
       return (
         name.includes(q) ||
         category.includes(q) ||
@@ -65,25 +62,53 @@ export default function OwnerProductsPage() {
     });
   }, [query, products]);
 
-  // Handle adding new product
   const handleAddSuccess = (newProduct) => {
-    setProducts((prev) => [...prev, newProduct]);
+    setProducts((prev) => {
+      const exists = prev.some(
+        (p) =>
+          p.product_id === newProduct.product_id &&
+          p.location_id === newProduct.location_id,
+      );
+
+      if (exists) return prev;
+
+      return [...prev, newProduct];
+    });
+  };
+
+  const handleEditSuccess = (updatedProduct) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.product_id === updatedProduct.product_id &&
+        p.location_id === updatedProduct.location_id
+          ? updatedProduct
+          : p,
+      ),
+    );
   };
 
   return (
     <div className="p-1 md:p-4 space-y-4">
+      {/* Stats */}
       <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="text-sm">Total Products</CardTitle>
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">{products.length}</div>
+            <div className="text-xl font-bold">
+              {
+                products
+                  .map((p) => p.product_id)
+                  .filter((v, i, a) => a.indexOf(v) === i).length
+              }
+            </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="text-sm">Out Of Stock</CardTitle>
           </CardHeader>
 
@@ -93,8 +118,9 @@ export default function OwnerProductsPage() {
             </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="text-sm">Low Stock</CardTitle>
           </CardHeader>
 
@@ -107,8 +133,9 @@ export default function OwnerProductsPage() {
             </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="text-sm">Inventory Value</CardTitle>
           </CardHeader>
 
@@ -122,38 +149,26 @@ export default function OwnerProductsPage() {
         </Card>
       </div>
 
+      {/* Products Table */}
       <Card>
         <CardHeader className="flex flex-col gap-2">
           <div className="flex justify-between items-center w-full">
-            <CardTitle className={"hidden sm:block"}>Products</CardTitle>
+            <CardTitle className="hidden sm:block">Products</CardTitle>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <Button onClick={() => setIsDialogOpen(true)}>Add Product</Button>
-              <AddProductDialog
-                isOpen={isDialogOpen}
-                onClose={() => setIsDialogOpen(false)}
-                onSuccess={handleAddSuccess}
-              />
+
               <Button onClick={() => setIsCategoryDialogOpen(true)}>
                 Add Category
               </Button>
-              <AddCategoryDialog
-                isOpen={isCategoryDialogOpen}
-                onClose={() => setIsCategoryDialogOpen(false)}
-                onSuccess={handleCategoryAdd}
-              />
+
               <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
-              <AddTagDialog
-                isOpen={isTagDialogOpen}
-                onClose={() => setIsTagDialogOpen(false)}
-                onSuccess={handleTagAdd}
-              />
             </div>
           </div>
 
-          {/* Filters */}
           <div className="flex gap-2 bg-white w-full justify-end flex-wrap">
-            {/* <LocationSelector /> */}
             <CategorySelection />
+
             <div className="mb-2 w-full max-w-sm">
               <Input
                 placeholder="Search products..."
@@ -167,13 +182,9 @@ export default function OwnerProductsPage() {
         <CardContent>
           <Table>
             <TableCaption>Product Details</TableCaption>
+
             <TableHeader>
               <TableRow className="bg-muted">
-                <TableHead className="w-10">
-                  <div className="flex justify-center items-center h-full">
-                    <Input type="checkbox" className="size-3.5 text-white" />
-                  </div>
-                </TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
@@ -191,18 +202,49 @@ export default function OwnerProductsPage() {
                 <ProductRow
                   key={`${product.product_id}-${product.location_id}`}
                   product={product}
+                  onEdit={(product) => {
+                    setEditingProduct(product);
+                    setIsEditDialogOpen(true);
+                  }}
                 />
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <AddProductDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSuccess={handleAddSuccess}
+      />
+
+      <AddCategoryDialog
+        isOpen={isCategoryDialogOpen}
+        onClose={() => setIsCategoryDialogOpen(false)}
+      />
+
+      <AddTagDialog
+        isOpen={isTagDialogOpen}
+        onClose={() => setIsTagDialogOpen(false)}
+      />
+
+      <EditProductDialog
+        product={editingProduct}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }
 
-// Product Row Component
-function ProductRow({ product }) {
+/* ============================= */
+/* Product Row */
+/* ============================= */
+
+function ProductRow({ product, onEdit }) {
   const {
     product_id,
     product_name,
@@ -215,46 +257,104 @@ function ProductRow({ product }) {
   } = product;
 
   let stockBadge;
+
   if (stock_quantity > reorder_level) {
-    stockBadge = (
-      <Badge variant="success" className="cursor-auto">
-        In Stock
-      </Badge>
-    );
+    stockBadge = <Badge variant="success">In Stock</Badge>;
   } else if (stock_quantity > 0) {
-    stockBadge = (
-      <Badge variant="warning" className="cursor-auto">
-        Low Stock
-      </Badge>
-    );
+    stockBadge = <Badge variant="warning">Low Stock</Badge>;
   } else {
-    stockBadge = (
-      <Badge variant="destructive" className="cursor-auto">
-        Out of Stock
-      </Badge>
-    );
+    stockBadge = <Badge variant="destructive">Out of Stock</Badge>;
   }
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        <div className="flex justify-center items-center h-full">
-          <Input type="checkbox" className="size-3 text-white" />
-        </div>
-      </TableCell>
       <TableCell>{product_id?.slice(0, 8)}</TableCell>
-      <TableCell className={" max-w-28 truncate"}>{product_name}</TableCell>
+
+      <TableCell className="max-w-28 truncate">{product_name}</TableCell>
+
       <TableCell>${price}</TableCell>
-      <TableCell>{category_name?.toUpperCase()}</TableCell>
+
+      <TableCell className={"capitalize"}>{category_name}</TableCell>
+
       <TableCell>{tags?.length ? tags.join(", ") : "NULL"}</TableCell>
+
       <TableCell>{stock_quantity || 0}</TableCell>
+
       <TableCell>{location_name || "N/A"}</TableCell>
+
       <TableCell>{stockBadge}</TableCell>
-      <TableCell className="flex justify-center items-center">
-        <div className="bg-gray-200 p-1 rounded-sm cursor-pointer hover:bg-gray-300">
+
+      <TableCell>
+        <div
+          onClick={() => onEdit(product)}
+          className="bg-gray-200 p-1 rounded-sm cursor-pointer hover:bg-gray-300 w-fit"
+        >
           <Edit className="size-4 text-gray-600" />
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+/* ============================= */
+/* Edit Product Dialog */
+/* ============================= */
+
+function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
+
+  useEffect(() => {
+    if (product) {
+      setPrice(product.price);
+      setStock(product.stock_quantity);
+    }
+  }, [product]);
+
+  if (!isOpen || !product) return null;
+
+  const handleSave = async () => {
+    const updated = {
+      ...product,
+      price: Number(price),
+      stock_quantity: Number(stock),
+    };
+
+    // TODO: call updateProduct service here
+
+    onSuccess(updated);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <Card className="w-[400px]">
+        <CardHeader>
+          <CardTitle>Edit Product</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          <Input
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="Price"
+          />
+
+          <Input
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            placeholder="Stock Quantity"
+          />
+
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+
+            <Button onClick={handleSave}>Save</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
