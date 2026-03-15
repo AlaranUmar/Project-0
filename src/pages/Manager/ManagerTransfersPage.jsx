@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,210 +10,226 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+
 import {
-  approveTransfer,
   getTransfers,
   handle_dispatch,
   handle_receive,
+  handle_request,
 } from "@/feautures/transfer/transferService";
+import RequestTransferModal from "@/feautures/transfer/RequestTransferModal";
+import { getStaff } from "@/feautures/staff/staffService";
+import { getProducts } from "@/feautures/products/productService";
 
-export default function ManagerTransfersPage() {
+export default function ManagerTransfersPage({ profile }) {
   const [transfers, setTransfers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [branchId, setBranchId] = useState(null);
   const [search, setSearch] = useState("");
-  const [selectedItems, setSelectedItems] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [openRequest, setOpenRequest] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Fetch all initial data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [transfersData, productsData] = await Promise.all([
+        getTransfers(),
+        getProducts(),
+      ]);
+
+      setTransfers(transfersData || []);
+      setProducts(productsData || []);
+
+      if (profile?.id) {
+        const staff = await getStaff(profile.id);
+        setBranchId(staff.location_id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTransfers = async () => {
-      setLoading(true);
-      const data = await getTransfers();
-      setTransfers(data);
-      setLoading(false);
-    };
+    fetchData();
+  }, [profile?.id]);
 
-    fetchTransfers();
-  }, []);
-
-  const filteredTransfers = transfers.filter(
-    (t) =>
-      t.transfer_id?.toLowerCase().includes(search?.toLowerCase()) ||
-      t.from_branch_name?.toLowerCase().includes(search?.toLowerCase()) ||
-      t.to_branch_name?.toLowerCase().includes(search?.toLowerCase()) ||
-      t.requested_by_name?.toLowerCase().includes(search?.toLowerCase()),
+  // Stats calculation
+  const stats = useMemo(
+    () => ({
+      total: transfers.length,
+      completed: transfers.filter((t) => t.status === "completed").length,
+      approved: transfers.filter((t) => t.status === "approved").length,
+      dispatched: transfers.filter((t) => t.status === "dispatched").length,
+    }),
+    [transfers],
   );
 
-  const toggleItemSelection = (transferId, productId) => {
-    setSelectedItems((prev) => {
-      const current = prev[transferId] || [];
-      const updated = current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId];
-      return { ...prev, [transferId]: updated };
-    });
-  };
+  // Debounced search filtering
+  const filteredTransfers = useMemo(() => {
+    const term = search.toLowerCase();
+    return transfers.filter(
+      (t) =>
+        t.id.toLowerCase().includes(term) ||
+        t.status.toLowerCase().includes(term) ||
+        t.from_branch?.toLowerCase().includes(term) ||
+        t.to_branch?.toLowerCase().includes(term),
+    );
+  }, [transfers, search]);
 
-  const handleApprove = async (transferId) => {
-    const items = selectedItems[transferId]?.map((pid) => ({
-      product_id: pid,
-      approved: true,
-    }));
-    if (!items || items.length === 0) return;
-
-    await approveTransfer(transferId, items);
-  };
-
+  // Dispatch transfer
   const handleDispatch = async (transferId) => {
-    await handle_dispatch(transferId);
+    setActionLoading(true);
+    try {
+      await handle_dispatch(transferId);
+      fetchData();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
+  // Receive transfer
   const handleReceive = async (transferId) => {
-    await handle_receive(transferId);
+    setActionLoading(true);
+    try {
+      await handle_receive(transferId);
+      fetchData();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  if (loading) return <div className="p-4">Loading transfers...</div>;
+  // Request a new transfer
+  const handleRequestTransfer = async (items) => {
+    if (!branchId) return;
+    setActionLoading(true);
+    try {
+      await handle_request(branchId, items);
+      setOpenRequest(false);
+      fetchData();
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading)
+    return <div className="p-4 text-center">Loading transfers...</div>;
 
   return (
     <div className="p-1 md:p-4 space-y-4">
+      {/* Stats Cards */}
       <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Total</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-lg font-semibold">{transfers.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Completed</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {transfers.filter((t) => t.status === "completed").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Approved</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {transfers.filter((t) => t.status === "approved").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Rejected</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {transfers.filter((t) => t.status === "rejected").length}
-            </div>
-          </CardContent>
-        </Card>
+        {Object.entries(stats).map(([label, value]) => (
+          <Card key={label}>
+            <CardHeader>
+              <CardTitle className="text-sm capitalize">{label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">{value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
       <Card>
-        <CardHeader>
+        <CardHeader className="flex justify-between items-center">
           <CardTitle>Transfer Management</CardTitle>
+          <Button
+            onClick={() =>
+              branchId ? setOpenRequest(true) : alert("Branch info loading...")
+            }
+          >
+            Request Transfer
+          </Button>
         </CardHeader>
         <CardContent>
+          {/* Search */}
           <div className="flex mb-4">
             <Input
-              placeholder="Search transfers by ID, from/to branch, or requester"
+              placeholder="Search by ID, Branch, or Status..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 mr-2"
+              className="flex-1"
             />
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-accent text-white">
-                <TableHead>Select</TableHead>
-                <TableHead>Transfer ID</TableHead>
-                <TableHead>From Branch</TableHead>
-                <TableHead>To Branch</TableHead>
-                <TableHead>Requested By</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {filteredTransfers.map((t) => (
-                <TableRow key={t.transfer_id} className="hover:bg-gray-50">
-                  <TableCell className="flex justify-center">
-                    <Input
-                      type="checkbox"
-                      checked={
-                        selectedItems[t.transfer_id]?.length === t.items.length
-                      }
-                      onChange={() =>
-                        t.items.forEach((item) =>
-                          toggleItemSelection(t.transfer_id, item.product_id),
-                        )
-                      }
-                    />
-                  </TableCell>
-
-                  <TableCell>{t.transfer_id.slice(0, 8)}</TableCell>
-                  <TableCell>{t.from_branch_name || "-"}</TableCell>
-                  <TableCell>{t.to_branch_name}</TableCell>
-                  <TableCell>{t.requested_by_name}</TableCell>
-                  <TableCell>{t.status}</TableCell>
-
-                  <TableCell className="flex flex-wrap">
-                    {t.items.map((item) => (
-                      <span
-                        key={item.product_id}
-                        title={`${item.product_name} (${item.quantity})`}
-                        className="mr-2 mb-1 px-1 rounded bg-gray-200 cursor-pointer"
-                        onClick={() =>
-                          toggleItemSelection(t.transfer_id, item.product_id)
-                        }
-                      >
-                        {item.product_name} ({item.quantity})
-                      </span>
-                    ))}
-                  </TableCell>
-
-                  <TableCell className="space-x-2">
-                    {t.status === "pending" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(t.transfer_id)}
-                      >
-                        Approve Selected
-                      </Button>
-                    )}
-                    {t.status === "approved" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleDispatch(t.transfer_id)}
-                      >
-                        Dispatch
-                      </Button>
-                    )}
-                    {t.status === "dispatched" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleReceive(t.transfer_id)}
-                      >
-                        Receive
-                      </Button>
-                    )}
-                  </TableCell>
+          {/* Transfer Table */}
+          {filteredTransfers.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              No transfers found.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-accent text-white">
+                  <TableHead>Transfer ID</TableHead>
+                  <TableHead>From Branch</TableHead>
+                  <TableHead>To Branch</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTransfers.map((t) => (
+                  <TableRow key={t.id} className="hover:bg-gray-50">
+                    <TableCell className="font-mono">
+                      {t.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell>{t.from_branch || "-"}</TableCell>
+                    <TableCell>{t.to_branch}</TableCell>
+                    <TableCell className="capitalize">{t.status}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {t.items.map((item) => (
+                          <span
+                            key={item.product_id}
+                            className="px-2 py-1 bg-secondary rounded text-[10px]"
+                          >
+                            {item.product_name} ({item.quantity})
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="space-x-2">
+                      {t.status === "approved" &&
+                        t.from_location_id === branchId && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleDispatch(t.id)}
+                            disabled={actionLoading}
+                          >
+                            Dispatch
+                          </Button>
+                        )}
+                      {t.status === "dispatched" &&
+                        t.to_location_id === branchId && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleReceive(t.id)}
+                            disabled={actionLoading}
+                          >
+                            Receive
+                          </Button>
+                        )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          {/* Request Transfer Modal */}
+          <RequestTransferModal
+            open={openRequest}
+            onClose={() => setOpenRequest(false)}
+            branchId={branchId}
+            products={products}
+            onSubmit={handleRequestTransfer}
+          />
         </CardContent>
       </Card>
     </div>

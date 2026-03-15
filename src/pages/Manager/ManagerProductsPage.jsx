@@ -45,15 +45,13 @@ function ManagerProductsPage() {
     async function loadProducts() {
       const data = await getProducts();
       setProducts(data);
-      
     }
     async function fetchSales() {
       const data = await getSales();
       setSales(data);
     }
-    fetchSales()
+    fetchSales();
     loadProducts();
-    
   }, []);
   return (
     <div className="p-3">
@@ -99,7 +97,9 @@ function ManagerProductsPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">${sumSales(sales).toLocaleString()}</div>
+              <div className="text-xl font-bold">
+                ${sumSales(sales).toLocaleString()}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -188,31 +188,26 @@ function Product({ product }) {
               </span>
             ))
           : "NULL"}
+        {console.log(product)}
       </TableCell>
       <TableCell>{product?.stock_quantity || 0}</TableCell>
       <TableCell>{product?.location_name || "not available"}</TableCell>
       <TableCell>
         {product?.stock_quantity > product.reorder_level ? (
-          <Badge variant="success">
-            Instock
-          </Badge>
-          // the variant "success" how to define
-          // you can add it to your Badge component like this:
-          // const badgeVariants = cva(
-          //   "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
-          //  {
-          //     variants: {
-          //       variant: {
-          //         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-          
-        ) : product?.stock_quantity > 0 ? (
-          <Badge variant="warning">
-            Low Stock
-          </Badge>
+          <Badge variant="success">Instock</Badge>
+        ) : // the variant "success" how to define
+        // you can add it to your Badge component like this:
+        // const badgeVariants = cva(
+        //   "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+        //  {
+        //     variants: {
+        //       variant: {
+        //         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+
+        product?.stock_quantity > 0 ? (
+          <Badge variant="warning">Low Stock</Badge>
         ) : (
-          <Badge variant="destructive">
-            Out of stock
-          </Badge>
+          <Badge variant="destructive">Out of stock</Badge>
         )}
       </TableCell>
     </TableRow>

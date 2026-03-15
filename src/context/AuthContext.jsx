@@ -46,6 +46,7 @@ export function AuthProvider({ children }) {
       try {
         setLoading(true);
         const profile = await getUserProfile(user.id);
+
         if (profile.user_role === "customer") {
           await logoutUser();
           alert("Customers cannot access this dashboard");

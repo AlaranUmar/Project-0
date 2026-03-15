@@ -46,7 +46,6 @@ export default function OwnerProductsPage() {
     }
     loadProducts();
   }, []);
-  console.log(products);
   const filteredProducts = useMemo(() => {
     if (!query) return products;
 

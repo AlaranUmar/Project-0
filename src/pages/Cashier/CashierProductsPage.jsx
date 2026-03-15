@@ -8,9 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CartPanel from "@/feautures/sales/CartPanel";
 import { useCart } from "@/context/CartContext";
-import { getStaff } from "@/feautures/users/profileService";
 import { getSales, sumSales } from "@/feautures/sales/Sales";
-
+import { getStaff } from "@/feautures/staff/staffService";
 function CashierProductsPage({ profile }) {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
@@ -45,7 +44,7 @@ function CashierProductsPage({ profile }) {
     loadProducts();
     fetchSales();
   }, [profile.id]);
-  
+
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
@@ -100,7 +99,6 @@ function CashierProductsPage({ profile }) {
             <CardTitle className="text-sm">Out Of Stock</CardTitle>
             <DollarSign size={18} />
           </CardHeader>
-
           <CardContent>
             <div className="text-xl font-bold">{outOfStock}</div>
           </CardContent>
@@ -113,7 +111,9 @@ function CashierProductsPage({ profile }) {
           </CardHeader>
 
           <CardContent>
-            <div className="text-xl font-bold">${sumSales(sales).toLocaleString()}</div>
+            <div className="text-xl font-bold">
+              ${sumSales(sales).toLocaleString()}
+            </div>
           </CardContent>
         </Card>
       </div>

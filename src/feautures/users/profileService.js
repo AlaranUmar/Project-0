@@ -10,12 +10,3 @@ export async function getUserProfile(userId) {
   if (error) throw error;
   return data;
 }
-export async function getStaff(userId) {
-  const { data, error } = await supabase
-    .from("staff_details")
-    .select("profile_id, location_id")
-    .eq("profile_id", userId)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
-}

@@ -2,11 +2,13 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function getBranches() {
   const { data, error } = await supabase.from("branch_staff_view").select("*");
+
+  console.log(data);
+
   if (error) throw error;
-  return { data };
+  return data;
 }
 export async function getBranchDetails(id) {
-  // 1. Fetch summary
   const { data: summary, error: summaryError } = await supabase
     .from("branch_summary")
     .select("*")
