@@ -9,15 +9,16 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { getStaffs } from "@/feautures/staff/staffService";
+import AddStaffModal from "../dashboard/AddStaffModal";
 export default function OwnerStaffPage() {
   const [staff, setStaff] = useState([]);
   const [search, setSearch] = useState("");
 
+  async function fetchStaff() {
+    const data = await getStaffs();
+    setStaff(data);
+  }
   useEffect(() => {
-    async function fetchStaff() {
-      const data = await getStaffs();
-      setStaff(data);
-    }
     fetchStaff();
   }, []);
   if (!staff) {
@@ -85,8 +86,8 @@ export default function OwnerStaffPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 mr-2"
             />
+            <AddStaffModal onStaffAdded={fetchStaff} />
           </div>
-
           <Table>
             <TableHeader>
               <TableRow className={"bg-accent"}>
