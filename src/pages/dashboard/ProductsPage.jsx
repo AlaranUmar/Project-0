@@ -6,12 +6,11 @@ import CashierProductsPage from "../Cashier/CashierProductsPage";
 
 export default function ProductsPage() {
   const { role, profile } = useAuth();
-  
-  
-  if (role === "owner") return <OwnerProductsPage profile={profile}/>;
+
+  if (role === "owner") return <OwnerProductsPage profile={profile} />;
   if (role === "admin") return <AdminProductsPage />;
   if (role === "manager") return <ManagerProductsPage />;
-  if (role === "cashier") return <CashierProductsPage profile={profile} />;
+  // if (role === "cashier") return <CashierProductsPage profile={profile} />;
 
   return null;
 }

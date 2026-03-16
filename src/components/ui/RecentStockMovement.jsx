@@ -48,12 +48,14 @@ export default function RecentStockMovement() {
                     <div className="flex-1 space-y-1">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm font-semibold leading-none capitalize w-full flex justify-between">
-                            {m.product_name}
+                          <span className="text-sm leading-none capitalize w-full flex justify-between gap-2">
+                            <p className="truncate max-w-40 inline-block">
+                              {m.product_name}
+                            </p>
                             <span className="text-xs text-muted-foreground">
                               {m.movement_type}
                             </span>
-                          </p>
+                          </span>
                           <p className="text-xs text-muted-foreground mt-1 capitalize">
                             {m.created_by_name} • {m.role}
                           </p>

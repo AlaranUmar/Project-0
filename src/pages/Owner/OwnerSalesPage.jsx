@@ -64,7 +64,7 @@ export default function OwnerSalesPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${totalTransferRevenue.toLocaleString()}
+              ₦{totalTransferRevenue.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -75,7 +75,7 @@ export default function OwnerSalesPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${totalCashRevenue.toLocaleString()}
+              ₦{totalCashRevenue.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -88,7 +88,7 @@ export default function OwnerSalesPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${totalPOSRevenue.toLocaleString()}
+              ₦{totalPOSRevenue.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -101,7 +101,7 @@ export default function OwnerSalesPage() {
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${totalRevenue.toLocaleString()}
+              ₦{totalRevenue.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -190,7 +190,7 @@ function SalesRow({ sale }) {
           ))}
         </div>
       </TableCell>
-      <TableCell>${amount.toLocaleString()}</TableCell>
+      <TableCell>₦{amount.toLocaleString()}</TableCell>
     </TableRow>
   );
 }

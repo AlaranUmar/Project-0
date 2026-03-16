@@ -3,7 +3,17 @@ import { supabase } from "@/lib/supabaseClient";
 export async function getProducts() {
   const { data, error } = await supabase.from("product_view").select("*");
   if (error) throw error;
-  console.log(data);
+  return data;
+}
+export async function updateProducts(product) {
+  const { data, error } = await supabase.rpc("update_product", {
+    p_id: product.product_id,
+    p_name: product.product_name,
+    p_price: product.price,
+    p_reorder_level: product.reorder_level,
+  });
+
+  if (error) throw error;
   return data;
 }
 export async function getCategories() {

@@ -8,6 +8,7 @@ import {
   Bus,
   Building2,
   ShoppingCart,
+  Scale,
 } from "lucide-react";
 export const sidebarMenu = {
   owner: [
@@ -17,9 +18,9 @@ export const sidebarMenu = {
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
-    { name: "Customers", path: "/customers", icon: Users },
+    // { name: "Customers", path: "/customers", icon: Users },
     { name: "Reports", path: "/reports", icon: BarChart3 },
-    { name: "Settings", path: "/settings", icon: Settings },
+    // { name: "Settings", path: "/settings", icon: Settings },
   ],
   admin: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -28,22 +29,24 @@ export const sidebarMenu = {
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
-    { name: "Customers", path: "/customers", icon: Users },
+    // { name: "Customers", path: "/customers", icon: Users },
     { name: "Reports", path: "/reports", icon: BarChart3 },
-    { name: "Settings", path: "/settings", icon: Settings },
+    // { name: "Settings", path: "/settings", icon: Settings },
   ],
-  
+
   manager: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: Package },
+    { name: "Products-sale", path: "/products-sale", icon: Scale },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
+    { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Transfers", path: "/transfers", icon: Bus },
     { name: "Reports", path: "/reports", icon: BarChart3 },
   ],
 
   cashier: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "Products", path: "/products", icon: Package },
+    { name: "Products-sale", path: "/products-sale", icon: Package },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
   ],
 };

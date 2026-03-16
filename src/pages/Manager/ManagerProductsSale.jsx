@@ -10,7 +10,7 @@ import CartPanel from "@/feautures/sales/CartPanel";
 import { useCart } from "@/context/CartContext";
 import { getSales, sumSales } from "@/feautures/sales/Sales";
 import { getStaff } from "@/feautures/staff/staffService";
-function CashierProductsPage({ profile }) {
+function ManagerProductsSale({ profile }) {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [staff, setStaff] = useState(null);
@@ -35,7 +35,7 @@ function CashierProductsPage({ profile }) {
     }
     async function fetchStaff() {
       setLoading(true);
-      const data = await getStaff(profile.id);
+      const data = await getStaff(profile?.id);
       setStaff(data);
       setLoading(false);
     }
@@ -49,7 +49,7 @@ function CashierProductsPage({ profile }) {
     fetchStaff();
     loadProducts();
     fetchSales();
-  }, [profile.id]);
+  }, [profile?.id]);
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
@@ -80,7 +80,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Total Products</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
@@ -91,7 +90,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Low Stock</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
@@ -102,7 +100,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Out Of Stock</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">{outOfStock}</div>
@@ -112,12 +109,11 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Total Sales</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${sumSales(sales).toLocaleString()}
+              ₦{sumSales(sales).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -155,7 +151,7 @@ function CashierProductsPage({ profile }) {
   );
 }
 
-export default CashierProductsPage;
+export default ManagerProductsSale;
 
 function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -187,7 +183,7 @@ function ProductCard({ product }) {
         </div>
 
         <p className="text-sm text-muted-foreground font-semibold">
-          ${product.price}
+          ₦{product.price}
         </p>
         <Button
           disabled={inStock(product)}

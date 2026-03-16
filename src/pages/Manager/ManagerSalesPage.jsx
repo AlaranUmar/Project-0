@@ -116,7 +116,7 @@ function ManagerSalesPage() {
 
                     <div className="text-right space-y-1">
                       <p className="font-semibold text-lg">
-                        {formatCurrency(sale.amount)}
+                        ₦{sale.amount.toLocaleString()}
                       </p>
                       <Badge variant="outline">
                         {sale.cashier_name || "Cashier"}
@@ -124,19 +124,21 @@ function ManagerSalesPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-md bg-muted/30 p-3 space-y-1 text-sm">
+                  <div className="rounded-md bg-muted/30 md:p-2 space-y-1 text-sm">
                     {sale.items?.map((item, index) => (
                       <div
                         key={index}
                         className="flex justify-between items-center"
                       >
-                        <span className="text-muted-foreground">
-                          {item.product_name}
+                        <span className="text-muted-foreground flex items-center">
+                          <span className="truncate max-w-30  inline-block">
+                            {item.product_name}
+                          </span>
                           <span className="text-xs ml-1">×{item.quantity}</span>
                         </span>
 
                         <span className="font-medium">
-                          {formatCurrency(item.subtotal)}
+                          ₦{item.subtotal.toLocaleString()}
                         </span>
                       </div>
                     ))}

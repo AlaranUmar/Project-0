@@ -21,26 +21,33 @@ export default function TransferOverlay({
   onRefresh,
 }) {
   const transfer = transfers.find((t) => t.id === transferId);
+  const isEditable = transfer?.status === "pending";
+
   const [selectedItems, setSelectedItems] = useState(() =>
     transfer.items.reduce((acc, item) => {
       acc[item.product_id] = { quantity: item.quantity, approved: undefined };
       return acc;
     }, {}),
   );
+
   const [selectedSourceBranch, setSelectedSourceBranch] = useState(null);
 
   const getAvailableStock = (productId) => {
     if (!selectedSourceBranch) return 0;
+
     const branchProducts = products.filter(
       (p) => String(p.location_id) === String(selectedSourceBranch),
     );
+
     const product = branchProducts.find((p) => p.product_id === productId);
+
     return product?.stock_quantity || 0;
   };
 
   const handleQuantityChange = (productId, value) => {
     const maxStock = getAvailableStock(productId);
     const quantity = Math.min(Number(value), maxStock);
+
     setSelectedItems((prev) => ({
       ...prev,
       [productId]: { ...prev[productId], quantity },
@@ -48,20 +55,28 @@ export default function TransferOverlay({
   };
 
   const toggleItemApproval = (productId, approved) => {
+    if (!isEditable) return;
+
     setSelectedItems((prev) => {
       const current = prev[productId];
       const newApproved = current?.approved === approved ? undefined : approved;
-      return { ...prev, [productId]: { ...current, approved: newApproved } };
+
+      return {
+        ...prev,
+        [productId]: { ...current, approved: newApproved },
+      };
     });
   };
 
   const allRejected = Object.values(selectedItems).every(
     (i) => i.approved === false,
   );
+
   const canSubmit =
-    allRejected ||
-    (selectedSourceBranch &&
-      Object.values(selectedItems).every((i) => i.approved !== undefined));
+    isEditable &&
+    (allRejected ||
+      (selectedSourceBranch &&
+        Object.values(selectedItems).every((i) => i.approved !== undefined)));
 
   const handleSubmit = async () => {
     try {
@@ -78,6 +93,7 @@ export default function TransferOverlay({
       } else {
         await approveTransfer(transferId, items, selectedSourceBranch);
       }
+
       onClose();
       onRefresh();
     } catch (err) {
@@ -88,7 +104,10 @@ export default function TransferOverlay({
 
   const branchesWithStock = products.reduce((acc, p) => {
     if (!acc.find((b) => b.location_id === p.location_id)) {
-      acc.push({ location_id: p.location_id, branch_name: p.location_name });
+      acc.push({
+        location_id: p.location_id,
+        branch_name: p.location_name,
+      });
     }
     return acc;
   }, []);
@@ -103,41 +122,50 @@ export default function TransferOverlay({
           <h3 className="text-lg font-semibold">
             Transfer {transferId.slice(0, 8)}
           </h3>
+
           <Button variant="destructive" size="sm" onClick={onClose}>
-            Cancel
+            Close
           </Button>
         </div>
 
-        {Object.values(selectedItems).some((i) => i.approved !== false) && (
-          <Select
-            value={selectedSourceBranch || ""}
-            onValueChange={setSelectedSourceBranch}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select source branch" />
-            </SelectTrigger>
-            <SelectContent>
-              {branchesWithStock.map((b) => (
-                <SelectItem key={b.location_id} value={b.location_id}>
-                  {b.branch_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        {/* Source Branch */}
+        {isEditable &&
+          Object.values(selectedItems).some((i) => i.approved !== false) && (
+            <Select
+              value={selectedSourceBranch || ""}
+              onValueChange={setSelectedSourceBranch}
+              disabled={!isEditable}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select source branch" />
+              </SelectTrigger>
+              <SelectContent>
+                {branchesWithStock.map((b) => (
+                  <SelectItem key={b.location_id} value={b.location_id}>
+                    {b.branch_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
+        {/* Items */}
         <div className="space-y-2 mt-4 h-[400px] overflow-y-auto">
           {transfer.items.map((item) => {
             const stock = getAvailableStock(item.product_id);
             const itemState = selectedItems[item.product_id];
+
             return (
               <div
                 key={item.product_id}
-                className={`flex items-center gap-2 flex-wrap p-1 rounded ${itemState.approved === true ? "bg-green-100" : ""} ${itemState.approved === false ? "bg-red-100" : ""}`}
+                className={`flex items-center gap-2 flex-wrap p-2 rounded 
+                ${itemState.approved === true ? "bg-green-100" : ""}
+                ${itemState.approved === false ? "bg-red-100" : ""}`}
               >
                 <span className="bg-gray-100 px-2 py-1 rounded text-sm">
                   {item.product_name} (Available: {stock})
                 </span>
+
                 <Input
                   type="number"
                   min={0}
@@ -146,18 +174,22 @@ export default function TransferOverlay({
                   onChange={(e) =>
                     handleQuantityChange(item.product_id, e.target.value)
                   }
-                  disabled={itemState.approved === false}
+                  disabled={!isEditable || itemState.approved === false}
                   className="w-20"
                 />
+
                 <Button
                   size="xs"
+                  disabled={!isEditable}
                   onClick={() => toggleItemApproval(item.product_id, true)}
                 >
                   {itemState.approved === true ? "Cancel" : "Approve"}
                 </Button>
+
                 <Button
                   size="xs"
                   variant="destructive"
+                  disabled={!isEditable}
                   onClick={() => toggleItemApproval(item.product_id, false)}
                 >
                   {itemState.approved === false ? "Cancel" : "Reject"}
@@ -167,9 +199,16 @@ export default function TransferOverlay({
           })}
         </div>
 
-        <Button className="mt-4" onClick={handleSubmit} disabled={!canSubmit}>
-          Submit Decisions
-        </Button>
+        {/* Submit */}
+        {isEditable && (
+          <Button
+            className="mt-4 w-full"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+          >
+            Submit Decisions
+          </Button>
+        )}
       </div>
     </div>
   );

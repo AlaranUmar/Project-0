@@ -6,37 +6,27 @@ import { getDateRange } from "@/feautures/branches/getDate";
 
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import RevenueExpenseChart from "@/feautures/dashboard/RevenueExpenseChart";
-import {
-  DateRangeSelector,
-  LocationSelector,
-} from "@/feautures/dashboard/Selectors";
+import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { useState } from "react";
 
 function OwnerDashboard() {
   const [dateRange, setDateRange] = useState("today");
-  const [branch, setBranch] = useState("all");
   const [startDate, endDate] = getDateRange(dateRange);
   const {
     totalSales,
     totalInventoryValue,
     totalProfit,
     loading,
-    branches,
     branchSalesData,
     revenueExpenseData,
     totalExpense,
-  } = useReports(startDate, endDate, "owner", branch);
+  } = useReports(startDate, endDate, "owner");
   if (loading) return <div>Loading..</div>;
   return (
     <div className="p-3">
       <div className="flex flex-col gap-3">
         <div className="flex justify-between md:justify-end gap-2">
           <DateRangeSelector onChange={setDateRange} value={dateRange} />
-          <LocationSelector
-            value={branch}
-            onChange={setBranch}
-            branches={branches}
-          />
         </div>
         <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>
@@ -45,7 +35,9 @@ function OwnerDashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">${totalSales}</div>
+              <div className="text-lg font-semibold">
+                ₦{totalSales?.toLocaleString()}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -54,7 +46,9 @@ function OwnerDashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">${totalInventoryValue}</div>
+              <div className="text-lg font-semibold">
+                ₦{totalInventoryValue?.toLocaleString()}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -63,7 +57,9 @@ function OwnerDashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">${totalProfit}</div>
+              <div className="text-lg font-semibold">
+                ₦{totalProfit?.toLocaleString()}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -72,7 +68,9 @@ function OwnerDashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="text-xl font-bold">${totalExpense}</div>
+              <div className="text-lg font-semibold">
+                ₦{totalExpense?.toLocaleString()}
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -14,7 +14,6 @@ export default function OwnerReportPage() {
   const [dateRange, setDateRange] = useState("today");
   const [startDate, endDate] = getDateRange(dateRange);
   const reportRef = useRef();
-  // const { data, daily, loading } = useReports(startDate, endDate, "owner");
   const {
     revenueExpenseData,
     branchSalesData,
@@ -26,7 +25,7 @@ export default function OwnerReportPage() {
     branches,
   } = useReports(startDate, endDate, "owner");
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader className="animate-spin" />;
 
   return (
     <div className="p-2 md:p-4 space-y-6" ref={reportRef}>

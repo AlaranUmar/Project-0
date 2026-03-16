@@ -1,7 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export async function getTransfers() {
-  const { data, error } = await supabase.from("transfers_overview").select("*");
+  const { data, error } = await supabase
+    .from("transfers_overview")
+    .select("*")
+    .order("created_at", { ascending: false });
   if (error) console.error(error);
   return data;
 }

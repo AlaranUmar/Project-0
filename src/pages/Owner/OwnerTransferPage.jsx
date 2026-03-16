@@ -16,6 +16,7 @@ import {
   handle_dispatch,
   handle_receive,
 } from "@/feautures/transfer/transferService";
+
 import { getProducts } from "@/feautures/products/productService";
 import TransferOverlay from "./TransferOverlay";
 
@@ -38,6 +39,11 @@ export default function OwnerTransfersPage() {
   useEffect(() => {
     fetchTransfers();
     loadProducts();
+
+    // Auto refresh transfers every 15 seconds
+    const interval = setInterval(fetchTransfers, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const stats = useMemo(
@@ -57,6 +63,16 @@ export default function OwnerTransfersPage() {
       ),
     [transfers, search],
   );
+
+  const dispatchTransfer = async (id) => {
+    await handle_dispatch(id);
+    await fetchTransfers();
+  };
+
+  const receiveTransfer = async (id) => {
+    await handle_receive(id);
+    await fetchTransfers();
+  };
 
   return (
     <div className="p-2 space-y-4">
@@ -79,6 +95,7 @@ export default function OwnerTransfersPage() {
         <CardHeader>
           <CardTitle>Transfer Management</CardTitle>
         </CardHeader>
+
         <CardContent>
           <Input
             placeholder="Search transfers..."
@@ -86,6 +103,7 @@ export default function OwnerTransfersPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="mb-4"
           />
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -99,6 +117,7 @@ export default function OwnerTransfersPage() {
                   <TableHead>Items</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filteredTransfers.map((t) => (
                   <TableRow key={t.id}>
@@ -106,27 +125,46 @@ export default function OwnerTransfersPage() {
                     <TableCell>{t.from_branch || "-"}</TableCell>
                     <TableCell>{t.to_branch}</TableCell>
                     <TableCell>{t.requested_by.slice(0, 8)}</TableCell>
-                    <TableCell>{t.status}</TableCell>
-                    <TableCell className="space-y-1">
+                    <TableCell className="capitalize">{t.status}</TableCell>
+
+                    <TableCell className="flex gap-2 flex-wrap">
+                      {/* View */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setActiveOverlay(t.id)}
+                      >
+                        View
+                      </Button>
+
+                      {/* Decide */}
                       {t.status === "pending" && (
                         <Button
                           size="sm"
                           onClick={() => setActiveOverlay(t.id)}
                         >
-                          View & Decide
+                          Decide
                         </Button>
                       )}
+
+                      {/* Dispatch */}
                       {t.status === "approved" && (
-                        <Button size="sm" onClick={() => handle_dispatch(t.id)}>
+                        <Button
+                          size="sm"
+                          onClick={() => dispatchTransfer(t.id)}
+                        >
                           Dispatch
                         </Button>
                       )}
+
+                      {/* Receive */}
                       {t.status === "dispatched" && (
-                        <Button size="sm" onClick={() => handle_receive(t.id)}>
+                        <Button size="sm" onClick={() => receiveTransfer(t.id)}>
                           Receive
                         </Button>
                       )}
                     </TableCell>
+
                     <TableCell>{t.items.length} items</TableCell>
                   </TableRow>
                 ))}

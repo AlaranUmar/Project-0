@@ -32,12 +32,11 @@ function CashierSalesPage() {
 
     return sales.filter((sale) => {
       const matchesId = sale.sale_id?.toLowerCase().includes(q);
-      const matchesCashier = sale.cashier_name?.toLowerCase().includes(q);
       const matchesProduct = sale.items?.some((item) =>
         item.product_name?.toLowerCase().includes(q),
       );
 
-      return matchesId || matchesCashier || matchesProduct;
+      return matchesId || matchesProduct;
     });
   }, [query, sales]);
 
@@ -60,7 +59,7 @@ function CashierSalesPage() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by sale ID, cashier or product..."
+            placeholder="Search by sale ID or product..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-10"
@@ -118,10 +117,6 @@ function CashierSalesPage() {
                       <p className="font-semibold text-lg">
                         {formatCurrency(sale.amount)}
                       </p>
-
-                      <Badge variant="outline">
-                        {sale.cashier_name || "Cashier"}
-                      </Badge>
                     </div>
                   </div>
 

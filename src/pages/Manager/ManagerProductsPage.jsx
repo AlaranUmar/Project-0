@@ -60,8 +60,6 @@ function ManagerProductsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Total Products</CardTitle>
-
-              <DollarSign size={18} />
             </CardHeader>
 
             <CardContent>
@@ -71,8 +69,6 @@ function ManagerProductsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Low Stock</CardTitle>
-
-              <DollarSign size={18} />
             </CardHeader>
 
             <CardContent>
@@ -82,8 +78,6 @@ function ManagerProductsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Out Of Stock</CardTitle>
-
-              <DollarSign size={18} />
             </CardHeader>
             <CardContent>
               <div className="text-xl font-bold">{outOfStock}</div>
@@ -92,13 +86,11 @@ function ManagerProductsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Sales</CardTitle>
-
-              <DollarSign size={18} />
             </CardHeader>
 
             <CardContent>
               <div className="text-xl font-bold">
-                ${sumSales(sales).toLocaleString()}
+                ₦{sumSales(sales).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -178,7 +170,7 @@ function Product({ product }) {
       <TableCell className={"truncate max-w-40"}>
         {product.product_name}
       </TableCell>
-      <TableCell>${product.price}</TableCell>
+      <TableCell>₦{product.price}</TableCell>
       <TableCell className={"capitalize"}>{product.category_name}</TableCell>
       <TableCell className={"flex flex-wrap space-x-1"}>
         {product.tags && product.tags.length > 0

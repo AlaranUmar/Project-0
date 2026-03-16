@@ -11,12 +11,13 @@ function Alerts() {
   useEffect(() => {
     async function fetchAlerts() {
       const data = await getRecentAlerts();
+      console.log(data);
       setAlerts(data);
     }
     fetchAlerts();
   }, []);
   return (
-    <Card className={"h-full"}>
+    <Card className={"w-full"}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
@@ -27,8 +28,8 @@ function Alerts() {
         </Badge>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="max-h-80 px-4">
-          <div className="flex flex-col gap-3">
+        <ScrollArea>
+          <div className="flex flex-col max-h-80 px-3 gap-3 py-1">
             {alerts?.length > 0 ? (
               alerts.map((alert) => (
                 <Alert
@@ -47,7 +48,7 @@ function Alerts() {
                     {alert?.title}
                   </AlertTitle>
                   <AlertDescription className="text-xs text-muted-foreground mt-1">
-                    {alert?.message}
+                    {alert?.message.slice(0, 30)}...
                     <div className="mt-2 flex items-center text-[10px] opacity-70">
                       {new Date(alert?.created_at).toLocaleDateString()} •{" "}
                       {alert?.location_name || "Global"}

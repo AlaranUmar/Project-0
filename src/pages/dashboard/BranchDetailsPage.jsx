@@ -1,7 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Package, TrendingDown, Wallet } from "lucide-react";
-import { useParams } from "react-router-dom";
+import {
+  ArrowBigLeft,
+  ArrowBigRight,
+  DollarSign,
+  Package,
+  TrendingDown,
+  Wallet,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getBranchDetails } from "@/feautures/branches/branchService";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 export default function BranchDetailsPage() {
   const [branchData, setBranchData] = useState(null);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadBranchData() {
@@ -50,15 +59,20 @@ export default function BranchDetailsPage() {
   } = branchData;
 
   return (
-    <div className="space-y-8 p-2">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight capitalize">
-          {branch_name}
-        </h1>
-        <p className="text-muted-foreground text-sm">{address}</p>
+    <div className="space-y-4 p-2 md:py-4 relative">
+      <div className="flex items-center gap-3 mt-2">
+        <Button
+          variant="link"
+          className={"absolute -top-2 -left-2"}
+          onClick={() => navigate(-1)}
+        >
+          <ArrowBigLeft />
+          Back
+        </Button>
+        <h1 className="text-lg font-semibold capitalize flex">{branch_name}</h1>
+        <p className="text-muted-foreground text-xs">{address}</p>
       </div>
 
-      {/* Stats */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Today's Revenue"
@@ -86,7 +100,6 @@ export default function BranchDetailsPage() {
         />
       </div>
 
-      {/* Tabs Section */}
       <Tabs defaultValue="sales" className="space-y-2">
         <TabsList className="inline-flex .scrollbar-hide w-full h-auto py-5 px-3 md:p-2 overflow-x-auto overflow-y-hidden justify-start bg-muted/50 scrollbar-hide">
           <TabsTrigger value="sales" className="px-4 py-3 whitespace-nowrap">
@@ -203,12 +216,6 @@ export default function BranchDetailsPage() {
         {/* INVENTORY */}
         <TabsContent value="inventory">
           <Card className={"gap-3"}>
-            <CardHeader>
-              <CardTitle>Branch Inventory</CardTitle>
-            </CardHeader>
-
-            <Separator />
-
             <CardContent className="pt-0">
               <Table>
                 <TableHeader>
@@ -224,7 +231,9 @@ export default function BranchDetailsPage() {
                   {products?.map((product) => (
                     <TableRow key={product.product_id}>
                       <TableCell className="font-medium">
-                        {product.name}
+                        <span className="truncate max-w-40">
+                          {product.name}
+                        </span>
                       </TableCell>
 
                       <TableCell>${product.price.toLocaleString()}</TableCell>
@@ -232,7 +241,7 @@ export default function BranchDetailsPage() {
                       <TableCell>{product.quantity}</TableCell>
 
                       <TableCell>
-                        {product.quantity < 10 ? (
+                        {product.quantity < product.restock_level ? (
                           <Badge variant="warning">Low Stock</Badge>
                         ) : (
                           <Badge variant="success">In Stock</Badge>
@@ -259,7 +268,6 @@ export default function BranchDetailsPage() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Direction</TableHead>
-                    <TableHead>Items</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -270,24 +278,33 @@ export default function BranchDetailsPage() {
                       <TableCell>
                         {new Date(transfer.created_at).toLocaleDateString()}
                       </TableCell>
-                      {/* <TableCell>
-            {transfer.}
-          </TableCell> */}
 
                       <TableCell>
-                        {transfer.from_location_id === id ? (
-                          <Badge variant="destructive">Outgoing</Badge>
-                        ) : transfer.to_location_id === id ? (
-                          <Badge variant="success">Incoming</Badge>
+                        {transfer.from_location === id ? (
+                          <Badge variant="destructive">
+                            Outward
+                            <ArrowBigRight />
+                          </Badge>
+                        ) : transfer.to_location === id ? (
+                          <Badge variant="success">
+                            Inward
+                            <ArrowBigLeft />
+                          </Badge>
                         ) : (
                           <Badge variant="warning">Not for this branch</Badge>
                         )}
                       </TableCell>
 
-                      <TableCell>{transfer.items?.length} item(s)</TableCell>
-
                       <TableCell className="capitalize">
-                        {transfer.status}
+                        {transfer.status === "approved" ? (
+                          <Badge variant="success">Approved</Badge>
+                        ) : transfer.status === "rejected" ? (
+                          <Badge variant="destructive">Rejected</Badge>
+                        ) : transfer.status === "pending" ? (
+                          <Badge>Pending</Badge>
+                        ) : (
+                          <Badge variant="success">Completed</Badge>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -320,7 +337,7 @@ export default function BranchDetailsPage() {
 function StatCard({ title, value, icon, color }) {
   return (
     <Card className="">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
@@ -329,7 +346,7 @@ function StatCard({ title, value, icon, color }) {
       </CardHeader>
 
       <CardContent>
-        <div className="text-2xl font-bold">
+        <div className="text-lg font-semibold">
           ${Number(value ?? 0).toLocaleString()}
         </div>
       </CardContent>

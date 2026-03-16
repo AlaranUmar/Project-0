@@ -11,17 +11,18 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Edit } from "lucide-react";
-
-import { getProducts } from "@/feautures/products/productService";
 import { Badge } from "@/components/ui/badge";
-import CategorySelection from "@/feautures/dashboard/CategorySelection";
+import { Edit } from "lucide-react";
+
 import {
-  AddCategoryDialog,
+  getProducts,
+  updateProducts,
+} from "@/feautures/products/productService";
+import {
   AddProductDialog,
+  AddCategoryDialog,
   AddTagDialog,
 } from "../dashboard/ProductDialog";
-
 export default function OwnerProductsPage() {
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
@@ -44,15 +45,12 @@ export default function OwnerProductsPage() {
 
   const filteredProducts = useMemo(() => {
     if (!query) return products;
-
     const q = query.toLowerCase();
-
     return products.filter((p) => {
       const name = p.product_name?.toLowerCase() || "";
       const category = p.category_name?.toLowerCase() || "";
       const location = p.location_name?.toLowerCase() || "";
       const tags = (p.tags || []).join(" ").toLowerCase();
-
       return (
         name.includes(q) ||
         category.includes(q) ||
@@ -69,9 +67,7 @@ export default function OwnerProductsPage() {
           p.product_id === newProduct.product_id &&
           p.location_id === newProduct.location_id,
       );
-
       if (exists) return prev;
-
       return [...prev, newProduct];
     });
   };
@@ -95,9 +91,8 @@ export default function OwnerProductsPage() {
           <CardHeader>
             <CardTitle className="text-sm">Total Products</CardTitle>
           </CardHeader>
-
           <CardContent>
-            <div className="text-xl font-bold">
+            <div className="text-xl font-semibold">
               {
                 products
                   .map((p) => p.product_id)
@@ -111,9 +106,8 @@ export default function OwnerProductsPage() {
           <CardHeader>
             <CardTitle className="text-sm">Out Of Stock</CardTitle>
           </CardHeader>
-
           <CardContent>
-            <div className="text-xl font-bold">
+            <div className="text-xl font-semibold">
               {products.filter((p) => p.stock_quantity === 0).length}
             </div>
           </CardContent>
@@ -123,12 +117,13 @@ export default function OwnerProductsPage() {
           <CardHeader>
             <CardTitle className="text-sm">Low Stock</CardTitle>
           </CardHeader>
-
           <CardContent>
-            <div className="text-xl font-bold">
+            <div className="text-xl font-semibold">
               {
-                products.filter((p) => p.stock_quantity <= p.reorder_level)
-                  .length
+                products.filter(
+                  (p) =>
+                    p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level,
+                ).length
               }
             </div>
           </CardContent>
@@ -138,9 +133,9 @@ export default function OwnerProductsPage() {
           <CardHeader>
             <CardTitle className="text-sm">Inventory Value</CardTitle>
           </CardHeader>
-
           <CardContent>
-            <div className="text-xl font-bold">
+            <div className="text-xl font-semibold">
+              ₦
               {products
                 .reduce((acc, p) => acc + p.price * p.stock_quantity, 0)
                 .toLocaleString()}
@@ -154,21 +149,15 @@ export default function OwnerProductsPage() {
         <CardHeader className="flex flex-col gap-2">
           <div className="flex justify-between items-center w-full">
             <CardTitle className="hidden sm:block">Products</CardTitle>
-
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <Button onClick={() => setIsDialogOpen(true)}>Add Product</Button>
-
               <Button onClick={() => setIsCategoryDialogOpen(true)}>
                 Add Category
               </Button>
-
               <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
             </div>
           </div>
-
           <div className="flex gap-2 bg-white w-full justify-end flex-wrap">
-            <CategorySelection />
-
             <div className="mb-2 w-full max-w-sm">
               <Input
                 placeholder="Search products..."
@@ -182,7 +171,6 @@ export default function OwnerProductsPage() {
         <CardContent>
           <Table>
             <TableCaption>Product Details</TableCaption>
-
             <TableHeader>
               <TableRow className="bg-muted">
                 <TableHead>ID</TableHead>
@@ -191,6 +179,7 @@ export default function OwnerProductsPage() {
                 <TableHead>Category</TableHead>
                 <TableHead>Tags</TableHead>
                 <TableHead>Quantity</TableHead>
+                <TableHead>Reorder Level</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
@@ -219,17 +208,14 @@ export default function OwnerProductsPage() {
         onClose={() => setIsDialogOpen(false)}
         onSuccess={handleAddSuccess}
       />
-
       <AddCategoryDialog
         isOpen={isCategoryDialogOpen}
         onClose={() => setIsCategoryDialogOpen(false)}
       />
-
       <AddTagDialog
         isOpen={isTagDialogOpen}
         onClose={() => setIsTagDialogOpen(false)}
       />
-
       <EditProductDialog
         product={editingProduct}
         isOpen={isEditDialogOpen}
@@ -243,7 +229,6 @@ export default function OwnerProductsPage() {
 /* ============================= */
 /* Product Row */
 /* ============================= */
-
 function ProductRow({ product, onEdit }) {
   const {
     product_id,
@@ -257,33 +242,23 @@ function ProductRow({ product, onEdit }) {
   } = product;
 
   let stockBadge;
-
-  if (stock_quantity > reorder_level) {
+  if (stock_quantity > reorder_level)
     stockBadge = <Badge variant="success">In Stock</Badge>;
-  } else if (stock_quantity > 0) {
+  else if (stock_quantity > 0)
     stockBadge = <Badge variant="warning">Low Stock</Badge>;
-  } else {
-    stockBadge = <Badge variant="destructive">Out of Stock</Badge>;
-  }
+  else stockBadge = <Badge variant="destructive">Out of Stock</Badge>;
 
   return (
     <TableRow>
       <TableCell>{product_id?.slice(0, 8)}</TableCell>
-
       <TableCell className="max-w-28 truncate">{product_name}</TableCell>
-
-      <TableCell>${price}</TableCell>
-
-      <TableCell className={"capitalize"}>{category_name}</TableCell>
-
+      <TableCell>₦{price?.toLocaleString()}</TableCell>
+      <TableCell className="capitalize">{category_name}</TableCell>
       <TableCell>{tags?.length ? tags.join(", ") : "NULL"}</TableCell>
-
       <TableCell>{stock_quantity || 0}</TableCell>
-
+      <TableCell>{reorder_level || 0}</TableCell>
       <TableCell>{location_name || "N/A"}</TableCell>
-
       <TableCell>{stockBadge}</TableCell>
-
       <TableCell>
         <div
           onClick={() => onEdit(product)}
@@ -297,17 +272,18 @@ function ProductRow({ product, onEdit }) {
 }
 
 /* ============================= */
-/* Edit Product Dialog */
+/* Edit Product Dialog with Labels */
 /* ============================= */
-
 function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
+  const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
+  const [reorderLevel, setReorderLevel] = useState("");
 
   useEffect(() => {
     if (product) {
+      setName(product.product_name);
       setPrice(product.price);
-      setStock(product.stock_quantity);
+      setReorderLevel(product.reorder_level);
     }
   }, [product]);
 
@@ -316,14 +292,18 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
   const handleSave = async () => {
     const updated = {
       ...product,
+      product_name: name,
       price: Number(price),
-      stock_quantity: Number(stock),
+      reorder_level: Number(reorderLevel),
     };
 
-    // TODO: call updateProduct service here
-
-    onSuccess(updated);
-    onClose();
+    try {
+      await updateProducts(updated);
+      onSuccess(updated);
+      onClose();
+    } catch (err) {
+      console.error("Failed to update product:", err);
+    }
   };
 
   return (
@@ -332,17 +312,34 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
         <CardHeader>
           <CardTitle>Edit Product</CardTitle>
         </CardHeader>
-
         <CardContent className="space-y-3">
+          <label className="block text-sm font-medium">Product Name</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Product Name"
+          />
+
+          <label className="block text-sm font-medium">Price</label>
           <Input
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="Price"
           />
 
+          <label className="block text-sm font-medium">Reorder Level</label>
           <Input
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
+            value={reorderLevel}
+            onChange={(e) => setReorderLevel(e.target.value)}
+            placeholder="Reorder Level"
+          />
+
+          <label className="block text-sm font-medium">
+            Stock Quantity (Read Only)
+          </label>
+          <Input
+            value={product.stock_quantity}
+            disabled
             placeholder="Stock Quantity"
           />
 
@@ -350,7 +347,6 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
             <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-
             <Button onClick={handleSave}>Save</Button>
           </div>
         </CardContent>

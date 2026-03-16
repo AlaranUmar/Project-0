@@ -1,0 +1,113 @@
+import React, { useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import { getStaffDetails } from "@/feautures/staff/staffService";
+export default function ManagerStaffsPage() {
+  const [staff, setStaff] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    async function fetchStaff() {
+      const data = await getStaffDetails();
+      console.log(data);
+      setStaff(data);
+    }
+    fetchStaff();
+  }, []);
+  if (!staff) {
+    return (
+      <div className="p-4">
+        <p>Loading staffs...</p>
+      </div>
+    );
+  }
+  const totalStaff = staff.length;
+  const totalCashier = staff.filter(
+    (s) => s.role.toLowerCase() === "cashier",
+  ).length;
+
+  const query = search.toLowerCase();
+  const filteredStaff = staff.filter(
+    (s) =>
+      s.full_name?.toLowerCase().includes(query) ||
+      s.email?.toLowerCase().includes(query) ||
+      s.role?.toLowerCase().includes(query),
+  );
+
+  return (
+    <div className="p-1 md:p-4 space-y-4">
+      <div className="grid gap-2 md:gap-5 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Staffs</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-sm md:text-lg font-semibold">{totalStaff}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Total Cashier</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-lg font-semibold">{totalCashier}</div>
+          </CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Staff Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center mb-4">
+            <Input
+              placeholder="Search staff by name, branch or role"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 mr-2"
+            />
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className={"bg-accent"}>
+                <TableCell>Id</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Salary</TableCell>
+                <TableCell>Branch</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Hired At</TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {console.log(staff)}
+              {filteredStaff.map((st) => (
+                <TableRow key={st.id}>
+                  <TableCell>{st.id.slice(0, 8)}</TableCell>
+                  <TableCell>{st.full_name}</TableCell>
+                  <TableCell>{st.role}</TableCell>
+                  <TableCell>{st.salary}</TableCell>
+                  <TableCell>{st.branch_name}</TableCell>
+                  <TableCell>{st.email}</TableCell>
+                  <TableCell>
+                    {new Date(st.hired_at).toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

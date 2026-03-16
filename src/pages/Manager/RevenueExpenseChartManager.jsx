@@ -9,13 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-function RevenueExpenseChartManager() {
-  const data = [
-    { name: "week 1", revenue: 2400, expense: 2240 },
-    { name: "week 2", revenue: 1398, expense: 2000 },
-    { name: "week 3", revenue: 8000, expense: 6500 },
-    { name: "week 4", revenue: 3908, expense: 5000 }
-  ];
+function RevenueExpenseChartManager({ data = [] }) {
   return (
     <div className="h-9/10 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -51,7 +45,6 @@ function RevenueExpenseChartManager() {
             fill="#22C55E"
             radius={[4, 4, 0, 0]} // Rounds only the top corners
           />
-
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -8,10 +8,11 @@ import OutOfStock from "./OutOfStock";
 import ProductSearch from "@/components/ProductSearch";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { getSales } from "@/feautures/sales/Sales";
-
+import { getStaffDetails } from "@/feautures/staff/staffService";
 function CashierDashboard({ profile }) {
   const [time, setTime] = useState(new Date());
   const [chartData, setChartData] = useState([]);
+  const [staff, setStaff] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -50,12 +51,21 @@ function CashierDashboard({ profile }) {
     };
     fetchChartData();
   }, []);
+  useEffect(() => {
+    async function fetchStaff() {
+      const data = await getStaffDetails(profile.id);
+      setStaff(data);
+    }
+    fetchStaff();
+  }, [profile.id]);
 
   return (
     <div className="px-3 py-2 flex flex-col gap-3">
       <header className="flex">
         <div className="w-full ">
-          <p className="text-sm font-normal leading-0 mb-2">Cashier</p>
+          <p className="text-sm font-normal leading-0 mb-1 capitalize">
+            {staff?.branch_name}
+          </p>
           <div className="flex justify-between w-full items-center">
             <h1 className="text-xl font-semibold tracking-tight capitalize">
               {profile?.full_name}
@@ -99,5 +109,3 @@ function CashierDashboard({ profile }) {
 }
 
 export default CashierDashboard;
-
-
