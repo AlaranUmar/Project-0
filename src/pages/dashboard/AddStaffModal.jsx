@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient"; // make sure you have this
 
 export default function AddStaffModal({ onStaffAdded }) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("staff");
+  const [role, setRole] = useState("cashier");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -19,16 +20,30 @@ export default function AddStaffModal({ onStaffAdded }) {
     setMessage("");
 
     try {
-      const res = await fetch("/api/invite-staff", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // ✅ get logged in user session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("You must be logged in");
+      }
+
+      // ✅ call edge function
+      const res = await fetch(
+        "https://lcfgfizlwkeyphpjzoxr.supabase.co/functions/v1/invite-user",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`, // 🔥 VERY IMPORTANT
+          },
+          body: JSON.stringify({
+            email,
+            role, // should be "cashier"
+          }),
         },
-        body: JSON.stringify({
-          email,
-          role,
-        }),
-      });
+      );
 
       const data = await res.json();
 
@@ -36,10 +51,10 @@ export default function AddStaffModal({ onStaffAdded }) {
         throw new Error(data.error || "Something went wrong");
       }
 
-      setMessage(data.message);
+      setMessage("Staff invited successfully");
 
       setEmail("");
-      setRole("staff");
+      setRole("cashier");
 
       if (onStaffAdded) {
         onStaffAdded();
@@ -71,8 +86,7 @@ export default function AddStaffModal({ onStaffAdded }) {
             onChange={(e) => setRole(e.target.value)}
             className="border rounded px-2 py-1"
           >
-            <option value="staff">Staff</option>
-            <option value="manager">Manager</option>
+            <option value="cashier">Cashier</option>
           </select>
 
           <Button onClick={handleAddStaff} disabled={loading}>

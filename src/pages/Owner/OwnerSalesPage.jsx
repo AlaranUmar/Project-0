@@ -82,8 +82,6 @@ export default function OwnerSalesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Total POS Revenue</CardTitle>
-
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
@@ -95,8 +93,6 @@ export default function OwnerSalesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Total Revenue</CardTitle>
-
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>

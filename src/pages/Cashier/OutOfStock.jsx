@@ -4,12 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area"; // Use the shadcn wrapper
 
 const products = [
-  { id: 1, name: "Espresso", price: "$3.50", popular: true, stock: 15 },
-  { id: 2, name: "Oat Milk Latte", price: "$5.50", popular: true, stock: 0 },
-  { id: 3, name: "Avocado Toast", price: "$12.00", popular: true, stock: 8 },
-  { id: 4, name: "Croissant", price: "$4.00", popular: true, stock: 0 },
-  { id: 4, name: "Croissant", price: "$9.30", popular: true, stock: 2 },
-  { id: 4, name: "Weries", price: "$4.00", popular: true, stock: 4 },
+  { id: 1, name: "Espresso", price: " ₦3762.50", popular: true, stock: 15 },
+  {
+    id: 2,
+    name: "Oat Milk Latte",
+    price: " ₦5121.50",
+    popular: true,
+    stock: 0,
+  },
+  { id: 3, name: "Avocado Toast", price: " ₦1221.00", popular: true, stock: 8 },
+  { id: 4, name: "Croissant", price: " ₦4211.00", popular: true, stock: 0 },
+  { id: 4, name: "Croissant", price: " ₦9984.30", popular: true, stock: 2 },
+  { id: 4, name: "Weries", price: " ₦4321.00", popular: true, stock: 4 },
 ];
 
 function OutOfStock() {

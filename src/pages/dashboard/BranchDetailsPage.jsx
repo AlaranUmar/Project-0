@@ -77,7 +77,7 @@ export default function BranchDetailsPage() {
         <StatCard
           title="Today's Revenue"
           value={revenue}
-          icon={<DollarSign size={18} />}
+          icon={<TrendingDown size={18} />}
           color="text-green-600"
         />
         <StatCard
@@ -165,7 +165,7 @@ export default function BranchDetailsPage() {
                       </TableCell>
 
                       <TableCell className="text-right font-medium">
-                        ${sale.amount.toLocaleString()}
+                        ₦{sale.amount.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -236,7 +236,7 @@ export default function BranchDetailsPage() {
                         </span>
                       </TableCell>
 
-                      <TableCell>${product.price.toLocaleString()}</TableCell>
+                      <TableCell> ₦{product.price.toLocaleString()}</TableCell>
 
                       <TableCell>{product.quantity}</TableCell>
 
@@ -347,7 +347,7 @@ function StatCard({ title, value, icon, color }) {
 
       <CardContent>
         <div className="text-lg font-semibold">
-          ${Number(value ?? 0).toLocaleString()}
+          ₦{Number(value ?? 0).toLocaleString()}
         </div>
       </CardContent>
     </Card>

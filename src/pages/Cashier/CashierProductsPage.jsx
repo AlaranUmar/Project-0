@@ -80,7 +80,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Total Products</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
@@ -91,7 +90,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Low Stock</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
@@ -102,7 +100,6 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Out Of Stock</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">{outOfStock}</div>
@@ -112,12 +109,11 @@ function CashierProductsPage({ profile }) {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-sm">Total Sales</CardTitle>
-            <DollarSign size={18} />
           </CardHeader>
 
           <CardContent>
             <div className="text-xl font-bold">
-              ${sumSales(sales).toLocaleString()}
+              ₦{sumSales(sales).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -187,7 +183,7 @@ function ProductCard({ product }) {
         </div>
 
         <p className="text-sm text-muted-foreground font-semibold">
-          ${product.price}
+          ₦{product.price}
         </p>
         <Button
           disabled={inStock(product)}
