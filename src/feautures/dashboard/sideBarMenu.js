@@ -9,6 +9,7 @@ import {
   Building2,
   ShoppingCart,
   Scale,
+  Bell,
 } from "lucide-react";
 export const sidebarMenu = {
   owner: [
@@ -18,6 +19,7 @@ export const sidebarMenu = {
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
+    { name: "Notifications", path: "/transfers", icon: Bell },
     // { name: "Customers", path: "/customers", icon: Users },
     { name: "Reports", path: "/reports", icon: BarChart3 },
     // { name: "Settings", path: "/settings", icon: Settings },
