@@ -1,18 +1,43 @@
-# React + Vite
+# Project-0
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React + Vite web application with real-time database integration and a professional UI component library.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Project-0 is a full-stack web application built with React 19 and Vite, featuring Supabase integration for real-time data management and a rich UI using shadcn/ui components with Tailwind CSS styling.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+### Frontend
+- **React** 19.2 - UI library
+- **Vite** 8.0 - Fast build tool and dev server with HMR
+- **Tailwind CSS** 4.2 - Utility-first CSS framework
+- **React Router** 7.13 - Client-side routing
+- **shadcn/ui** - High-quality React components
+- **Radix UI** - Accessible component primitives
+- **Lucide React** - Icon library
 
-Note: This will impact Vite dev & build performances.
+### Data & Forms
+- **Supabase** - Real-time PostgreSQL database and authentication
+- **React Hook Form** 7.71 - Efficient form management
+- **Zod** 4.3 - TypeScript-first schema validation
+- **date-fns** 4.1 - Date utilities
 
-## Expanding the ESLint configuration
+### Visualization & Export
+- **Recharts** 2.15 - React charting library
+- **Chart.js** 4.5 & react-chartjs-2 - Alternative charting option
+- **html2canvas** 1.4 - Screenshot functionality
+- **jsPDF** 4.2 - PDF generation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### UI & UX
+- **Sonner** 2.0 - Toast notifications
+- **cmdk** 1.1 - Command menu
+- **class-variance-authority** - CSS class composition
+- **clsx** & **tailwind-merge** - Utility merging
+
+### Development
+- **ESLint** 9.39 - Code quality
+- **Babel React Compiler** - Automatic optimization
+- **PostCSS** & **Autoprefixer** - CSS processing
+
+## Project Structure
