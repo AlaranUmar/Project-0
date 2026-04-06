@@ -86,8 +86,8 @@ export default function OwnerStaffPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 mr-2"
             />
-            <AddStaffModal onStaffAdded={fetchStaff} />
           </div>
+          {/* <AddStaffModal onStaffAdded={fetchStaff} /> */}
           <Table>
             <TableHeader>
               <TableRow className={"bg-accent"}>

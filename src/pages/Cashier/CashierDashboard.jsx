@@ -9,6 +9,7 @@ import ProductSearch from "@/components/ProductSearch";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { getSales } from "@/feautures/sales/Sales";
 import { getStaffDetails } from "@/feautures/staff/staffService";
+import { Link } from "react-router-dom";
 function CashierDashboard({ profile }) {
   const [time, setTime] = useState(new Date());
   const [chartData, setChartData] = useState([]);
@@ -78,9 +79,11 @@ function CashierDashboard({ profile }) {
             })}
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-5 w-5" /> Create Sale
-        </Button>
+        <Link to={"products-sale"}>
+          <Button className="gap-2">
+            <Plus className="h-5 w-5" /> Create Sale
+          </Button>
+        </Link>
       </header>
       <div className="flex justify-between gap-2 w-full">
         <ProductSearch />

@@ -23,6 +23,7 @@ import {
   AddCategoryDialog,
   AddTagDialog,
 } from "../dashboard/ProductDialog";
+import RestockDialog from "../dashboard/RestockDialog";
 export default function OwnerProductsPage() {
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
@@ -30,6 +31,9 @@ export default function OwnerProductsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
+
+  const [restockingProduct, setRestockingProduct] = useState(null);
+  const [isRestockDialogOpen, setIsRestockDialogOpen] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -157,7 +161,7 @@ export default function OwnerProductsPage() {
               <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
             </div>
           </div>
-          <div className="flex gap-2 bg-white w-full justify-end flex-wrap">
+          <div className="flex gap-2  w-full justify-end flex-wrap">
             <div className="mb-2 w-full max-w-sm">
               <Input
                 placeholder="Search products..."
@@ -179,7 +183,7 @@ export default function OwnerProductsPage() {
                 <TableHead>Category</TableHead>
                 <TableHead>Tags</TableHead>
                 <TableHead>Quantity</TableHead>
-                <TableHead>Reorder Level</TableHead>
+                <TableHead>Reorder</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
@@ -194,6 +198,10 @@ export default function OwnerProductsPage() {
                   onEdit={(product) => {
                     setEditingProduct(product);
                     setIsEditDialogOpen(true);
+                  }}
+                  onRestock={(product) => {
+                    setRestockingProduct(product);
+                    setIsRestockDialogOpen(true);
                   }}
                 />
               ))}
@@ -222,6 +230,21 @@ export default function OwnerProductsPage() {
         onClose={() => setIsEditDialogOpen(false)}
         onSuccess={handleEditSuccess}
       />
+      <RestockDialog
+        product={restockingProduct}
+        isOpen={isRestockDialogOpen}
+        onClose={() => setIsRestockDialogOpen(false)}
+        onSuccess={(updated) =>
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.product_id === updated.product_id &&
+              p.location_id === updated.location_id
+                ? updated
+                : p,
+            ),
+          )
+        }
+      />
     </div>
   );
 }
@@ -229,7 +252,7 @@ export default function OwnerProductsPage() {
 /* ============================= */
 /* Product Row */
 /* ============================= */
-function ProductRow({ product, onEdit }) {
+function ProductRow({ product, onEdit, onRestock }) {
   const {
     product_id,
     product_name,
@@ -259,13 +282,14 @@ function ProductRow({ product, onEdit }) {
       <TableCell>{reorder_level || 0}</TableCell>
       <TableCell>{location_name || "N/A"}</TableCell>
       <TableCell>{stockBadge}</TableCell>
-      <TableCell>
-        <div
-          onClick={() => onEdit(product)}
-          className="bg-gray-200 p-1 rounded-sm cursor-pointer hover:bg-gray-300 w-fit"
-        >
-          <Edit className="size-4 text-gray-600" />
-        </div>
+      <TableCell className={"grid gap-0.5"}>
+        <Button size="sm" variant="success" onClick={() => onRestock(product)}>
+          Restock
+        </Button>
+        <Button onClick={() => onEdit(product)} size="sm">
+          Edit
+          <Edit className="size-4 " />
+        </Button>
       </TableCell>
     </TableRow>
   );

@@ -22,7 +22,7 @@ function RevenueExpenseChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#eee" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
         <XAxis
           dataKey="branch"
           tick={{ fill: "#888", fontSize: 12 }}
@@ -33,6 +33,7 @@ function RevenueExpenseChart({ data }) {
           axisLine={false}
           tickLine={false}
           tick={{ fill: "#888", fontSize: 12 }}
+          tickFormatter={(value) => `₦${value.toLocaleString()}`}
         />
         <Legend verticalAlign="bottom" />
         <Tooltip

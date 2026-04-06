@@ -111,7 +111,6 @@ function BranchesPage() {
                   onChange={(e) => setQuery(e.target.value)}
                   className={"max-w-90"}
                 />
-                <LocationSelector onChange={setBranch} branches={branches} />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -140,7 +139,7 @@ function BranchesPage() {
 function BranchCard({ name, type, id, address, total_staff }) {
   const navigate = useNavigate();
   return (
-    <Card className={"bg-gray-50 shadow-accent shadow-md"}>
+    <Card className={" shadow-accent shadow-md"}>
       <CardHeader>
         <CardTitle className={"flex justify-between items-center"}>
           <p className="flex gap-1">

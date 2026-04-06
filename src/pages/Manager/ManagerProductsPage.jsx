@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getSales, sumSales } from "@/feautures/sales/Sales";
+import { Link } from "react-router-dom";
 function ManagerProductsPage() {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
@@ -102,9 +103,11 @@ function ManagerProductsPage() {
                 className={"flex justify-between items-center w-full py-1"}
               >
                 <span>Products</span>
-                <Button className="gap-2">
-                  <Plus className="h-5 w-5" /> Create Sale
-                </Button>
+                <Link to={"/products-sale"}>
+                  <Button className="gap-2">
+                    <Plus className="h-5 w-5" /> Create Sale
+                  </Button>
+                </Link>
               </CardTitle>
               <div className="flex gap-2 bg-white w-full justify-end">
                 <div className="mb-4 w-full max-w-sm">

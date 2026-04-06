@@ -117,7 +117,7 @@ export default function TransferOverlay({
       className="fixed inset-0 bg-black/30 flex justify-center items-start p-4 z-50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-lg shadow-lg p-4 max-w-xl w-full">
+      <div className="bg-white h-fit rounded-lg shadow-lg p-4 max-w-xl w-full">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold">
             Transfer {transferId.slice(0, 8)}
@@ -150,7 +150,7 @@ export default function TransferOverlay({
           )}
 
         {/* Items */}
-        <div className="space-y-2 mt-4 h-[400px] overflow-y-auto">
+        <div className="space-y-2 mt-4 h-fit overflow-y-auto">
           {transfer.items.map((item) => {
             const stock = getAvailableStock(item.product_id);
             const itemState = selectedItems[item.product_id];

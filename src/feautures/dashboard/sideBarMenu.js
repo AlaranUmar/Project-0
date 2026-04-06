@@ -44,11 +44,13 @@ export const sidebarMenu = {
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Transfers", path: "/transfers", icon: Bus },
     { name: "Reports", path: "/reports", icon: BarChart3 },
+    { name: "Notifications", path: "/transfers", icon: Bell },
   ],
 
   cashier: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products-sale", path: "/products-sale", icon: Package },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
+    { name: "Notifications", path: "/transfers", icon: Bell },
   ],
 };

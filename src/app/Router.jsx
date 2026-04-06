@@ -17,6 +17,7 @@ import StaffsPage from "@/pages/dashboard/StaffsPage";
 import TransfersPage from "@/pages/dashboard/TransfersPage";
 import WarehouseDetailsPage from "@/pages/dashboard/WarehouseDetailsPage";
 import ProductsSale from "@/feautures/dashboard/Products-Sale";
+import NotificationsPage from "@/pages/dashboard/NotificationsPage";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
             {/* <Route path="customers" element={<CustomersPage />} /> */}
             <Route path="transfers" element={<TransfersPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             {/* <Route path="settings" element={<SettingsPage />} /> */}
           </Route>
         </Route>

@@ -25,6 +25,7 @@ function RevenueExpenseChartManager({ data = [] }) {
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#888", fontSize: 12 }}
+            tickFormatter={(value) => `₦${value.toLocaleString()}`}
           />
           <Tooltip
             cursor={{ fill: "transparent" }} // Removes the grey box on hover

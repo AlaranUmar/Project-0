@@ -40,7 +40,7 @@ function BranchSalesChart({ data }) {
             }}
             formatter={(value) => [`₦${value.toLocaleString()}`, "Sales"]}
           />
-          <Legend verticalAlign="top" align="right" iconType="circle" />
+          <Legend verticalAlign="bottom" align="right" iconType="circle" />
           <Bar
             dataKey="sales" // MUST MATCH THE KEY IN YOUR DATA
             name="Total Sales"
