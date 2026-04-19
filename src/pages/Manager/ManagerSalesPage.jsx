@@ -40,12 +40,6 @@ function ManagerSalesPage() {
       return matchesId || matchesCashier || matchesProduct;
     });
   }, [query, sales]);
-  console.log(sales);
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
 
   return (
     <div className="container mx-auto max-w-5xl p-6 space-y-6">

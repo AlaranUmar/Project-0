@@ -4,14 +4,13 @@ import { Terminal, AlertCircle, Bell, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { useState, useEffect } from "react";
-import { getRecentAlerts } from "@/feautures/inventory/alertsService";
+import { getRecentAlerts } from "@/feautures/alerts/alertsService";
 
 function Alerts() {
   const [alerts, setAlerts] = useState([]);
   useEffect(() => {
     async function fetchAlerts() {
       const data = await getRecentAlerts();
-      console.log(data);
       setAlerts(data);
     }
     fetchAlerts();

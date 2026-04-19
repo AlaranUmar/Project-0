@@ -183,7 +183,6 @@ function Product({ product }) {
               </span>
             ))
           : "NULL"}
-        {console.log(product)}
       </TableCell>
       <TableCell>{product?.stock_quantity || 0}</TableCell>
       <TableCell>

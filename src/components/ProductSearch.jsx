@@ -27,7 +27,6 @@ export default function ProductSearch() {
   const handleSelect = (product) => {
     setQuery(product.product_name);
     setOpen(false);
-    console.log("Selected:", product);
   };
 
   useEffect(() => {
@@ -77,7 +76,9 @@ export default function ProductSearch() {
                     )}
                 </span>
                 <span className="text-gray-500 text-sm">₦{product.price}</span>
-                <span className="text-gray-500 text-sm">{product.stock_quantity ?? 0}</span>
+                <span className="text-gray-500 text-sm">
+                  {product.stock_quantity ?? 0}
+                </span>
               </li>
             ))
           ) : (

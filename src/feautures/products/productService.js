@@ -11,11 +11,13 @@ export async function updateProducts(product) {
     p_name: product.product_name,
     p_price: product.price,
     p_reorder_level: product.reorder_level,
+    p_image_url: product.image_url,
   });
 
   if (error) throw error;
   return data;
 }
+
 export async function getCategories() {
   const { data, error } = await supabase.from("categories").select("*");
   if (error) throw error;
@@ -77,10 +79,10 @@ export async function createProduct(product) {
       p_location: product.location_id,
       p_stock: product.initial_stock || 0,
       p_tags: product.tags || [],
+      p_image_url: product.image_url, // Added mapping
     });
 
     if (error) throw error;
-
     return data[0];
   } catch (err) {
     console.error("Error creating product:", err);

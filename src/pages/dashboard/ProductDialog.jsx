@@ -3,18 +3,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   createCategory,
   createProduct,
   createTag,
   getCategories,
   getLocations,
-  getTags, // <-- import tags
+  getTags,
 } from "@/feautures/products/productService";
 
-import { Badge } from "@/components/ui/badge";
-
+/* ============================= */
+/* Add Product Form Component    */
+/* ============================= */
 export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -30,15 +38,18 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
     reorder_level: 12,
     location_id: "",
     initial_stock: "",
+    image_url: "", // Added field
   };
+
   const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
     async function fetchData() {
-      const cats = await getCategories();
-      const locs = await getLocations();
-      const tgs = await getTags();
-
+      const [cats, locs, tgs] = await Promise.all([
+        getCategories(),
+        getLocations(),
+        getTags(),
+      ]);
       setCategories(cats || []);
       setLocations(locs || []);
       setTags(tgs || []);
@@ -47,10 +58,11 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   }, []);
 
   const handleChange = (field, value) => {
+    // Numeric validation for specific fields
     if (
       ["price", "cost_price", "initial_stock", "reorder_level"].includes(field)
     ) {
-      if (!/^\d*$/.test(value)) return; // allow only numbers
+      if (!/^\d*$/.test(value)) return;
     }
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -64,7 +76,6 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const payload = {
         ...form,
@@ -72,6 +83,7 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
         cost_price: Number(form.cost_price),
         initial_stock: Number(form.initial_stock),
         reorder_level: Number(form.reorder_level),
+        image_url: form.image_url, // Added to payload
         tags: selectedTags,
         stocks: [
           {
@@ -82,14 +94,14 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
         createdBy: currentUserId,
       };
 
-      // 1️⃣ create product
       const createdProduct = await createProduct(payload);
 
-      // 2️⃣ fetch full product row so table structure matches
+      // Construct object to match your table view requirements
       const fullProduct = {
         product_id: createdProduct.product_id,
         product_name: form.name,
         price: payload.price,
+        image_url: form.image_url, // Added for UI sync
         category_name:
           categories.find((c) => c.id === form.category_id)?.name || "",
         location_name:
@@ -101,9 +113,7 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
           .map((t) => t.name),
       };
 
-      // 3️⃣ send to parent table
       onSuccess?.(fullProduct);
-
       setForm(initialForm);
       setSelectedTags([]);
       onClose?.();
@@ -115,10 +125,9 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-2xl mx-auto border-none shadow-none">
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6">
-          {/* Product Name */}
+        <CardContent className="space-y-4 pt-4">
           <div className="space-y-2">
             <Label>Product Name</Label>
             <Input
@@ -129,10 +138,18 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             />
           </div>
 
-          {/* Price & Cost */}
+          <div className="space-y-2">
+            <Label>Image URL</Label>
+            <Input
+              placeholder="https://example.com"
+              value={form.image_url}
+              onChange={(e) => handleChange("image_url", e.target.value)}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Selling Price</Label>
+              <Label>Selling Price (₦)</Label>
               <Input
                 type="number"
                 value={form.price}
@@ -140,9 +157,8 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
                 required
               />
             </div>
-
             <div className="space-y-2">
-              <Label>Cost Price</Label>
+              <Label>Cost Price (₦)</Label>
               <Input
                 type="number"
                 value={form.cost_price}
@@ -152,11 +168,10 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             </div>
           </div>
 
-          {/* Category */}
           <div className="space-y-2">
             <Label>Category</Label>
             <select
-              className="w-full border rounded-md p-2 bg-background"
+              className="w-full border rounded-md p-2 bg-background text-sm"
               value={form.category_id}
               onChange={(e) => handleChange("category_id", e.target.value)}
               required
@@ -170,7 +185,6 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             </select>
           </div>
 
-          {/* Tags */}
           <div className="space-y-2">
             <Label>Tags</Label>
             <div className="flex flex-wrap gap-2 mt-1">
@@ -189,7 +203,6 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             </div>
           </div>
 
-          {/* Initial Stock & Reorder Level */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Initial Stock</Label>
@@ -200,7 +213,6 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label>Reorder Level</Label>
               <Input
@@ -212,11 +224,10 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             </div>
           </div>
 
-          {/* Warehouse */}
           <div className="space-y-2">
-            <Label>Warehouse</Label>
+            <Label>Warehouse Location</Label>
             <select
-              className="w-full border rounded-md p-2 bg-background"
+              className="w-full border rounded-md p-2 bg-background text-sm"
               value={form.location_id}
               onChange={(e) => handleChange("location_id", e.target.value)}
               required
@@ -232,8 +243,10 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
             </select>
           </div>
         </CardContent>
-
-        <CardFooter className="flex justify-end">
+        <CardFooter className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={loading}>
             {loading ? "Adding..." : "Add Product"}
           </Button>
@@ -243,21 +256,35 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   );
 }
 
+/* ============================= */
+/* Dialog Wrapper Components     */
+/* ============================= */
+export function AddProductDialog({ isOpen, onClose, onSuccess }) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add New Product</DialogTitle>
+        </DialogHeader>
+        <AddProductForm onSuccess={onSuccess} onClose={onClose} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AddCategoryDialog({ isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
-
   const handleSubmit = async () => {
     if (!name) return;
     try {
       const newCategory = await createCategory(name);
-      onSuccess(newCategory);
+      onSuccess?.(newCategory);
       setName("");
       onClose();
     } catch (err) {
       console.error(err);
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -279,19 +306,17 @@ export function AddCategoryDialog({ isOpen, onClose, onSuccess }) {
 
 export function AddTagDialog({ isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
-
   const handleSubmit = async () => {
     if (!name) return;
     try {
       const newTag = await createTag(name);
-      onSuccess(newTag);
+      onSuccess?.(newTag);
       setName("");
       onClose();
     } catch (err) {
       console.error(err);
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -306,27 +331,6 @@ export function AddTagDialog({ isOpen, onClose, onSuccess }) {
         <DialogFooter>
           <Button onClick={handleSubmit}>Add</Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-export function AddProductDialog({ isOpen, onClose, onSuccess }) {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
-        </DialogHeader>
-        <AddProductForm onSuccess={onSuccess} onClose={onClose} />
       </DialogContent>
     </Dialog>
   );

@@ -38,7 +38,7 @@
   --accent-foreground: oklch(0.208 0.042 265.755);
 
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
+  /* --destructive-foreground: oklch(0.985 0 0); */
 
   --success: oklch(0.627 0.194 149.214); /* Emerald 500 */
   --warning: oklch(0.769 0.188 70.08); /* Amber 500 */

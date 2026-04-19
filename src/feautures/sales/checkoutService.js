@@ -1,9 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
 
-/**
- * Checkout cart using Supabase
- * Automation: The database trigger 'after_sale_item_insert' now handles stock_movements.
- */
 export async function checkoutCart(
   cart,
   profile,
@@ -14,38 +10,20 @@ export async function checkoutCart(
   if (!profile?.id) throw new Error("Invalid user");
   if (!locationId) throw new Error("Location not set");
 
-  // 1. Create the Sale record
-  const totalAmount = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const { data: sale, error: saleError } = await supabase
-    .from("sales")
-    .insert({
-      created_by: profile.id,
-      location_id: locationId,
-      amount: totalAmount,
-      customer_id: customerId,
-    })
-    .select()
-    .single();
-
-  if (saleError) throw saleError;
-
-  const saleItemsPayload = cart.map((item) => ({
-    sale_id: sale.id,
+  const items = cart.map((item) => ({
     product_id: item.product_id,
     quantity: item.quantity,
     price: item.price,
-    subtotal: item.quantity * item.price,
   }));
 
-  const { error: saleItemsError } = await supabase
-    .from("sale_items")
-    .insert(saleItemsPayload);
+  const { data, error } = await supabase.rpc("create_offline_sale", {
+    p_location_id: locationId,
+    p_payment_method: "cash",
+    p_items: JSON.parse(JSON.stringify(items)), // 🔥 FIX
+    p_customer_id: customerId,
+  });
 
-  if (saleItemsError) {
-    // Note: In a production app, you might want to delete the 'sale' record here
-    // if the items fail, or use a Database RPC for atomic transactions.
-    throw saleItemsError;
-  }
+  if (error) throw error;
 
-  return sale;
+  return data;
 }

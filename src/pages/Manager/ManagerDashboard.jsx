@@ -58,7 +58,6 @@ function ManagerDashboard({ profile }) {
   useEffect(() => {
     async function fetchSales() {
       const data = await getSales();
-      console.log("Sales data:", data);
       setSales(data || []);
     }
 

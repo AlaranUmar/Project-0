@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit } from "lucide-react";
+import { Edit, ImageIcon } from "lucide-react";
 
 import {
   getProducts,
@@ -177,7 +177,7 @@ export default function OwnerProductsPage() {
             <TableCaption>Product Details</TableCaption>
             <TableHeader>
               <TableRow className="bg-muted">
-                <TableHead>ID</TableHead>
+                <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Category</TableHead>
@@ -273,7 +273,19 @@ function ProductRow({ product, onEdit, onRestock }) {
 
   return (
     <TableRow>
-      <TableCell>{product_id?.slice(0, 8)}</TableCell>
+      <TableCell>
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt=""
+            className="size-10 rounded object-cover border"
+          />
+        ) : (
+          <div className="size-10 bg-muted rounded flex items-center justify-center">
+            <ImageIcon className="size-4 text-muted-foreground" />
+          </div>
+        )}
+      </TableCell>
       <TableCell className="max-w-28 truncate">{product_name}</TableCell>
       <TableCell>₦{price?.toLocaleString()}</TableCell>
       <TableCell className="capitalize">{category_name}</TableCell>
@@ -302,12 +314,14 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [reorderLevel, setReorderLevel] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     if (product) {
       setName(product.product_name);
       setPrice(product.price);
       setReorderLevel(product.reorder_level);
+      setImageUrl(product.image_url || "");
     }
   }, [product]);
 
@@ -319,6 +333,7 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
       product_name: name,
       price: Number(price),
       reorder_level: Number(reorderLevel),
+      image_url: imageUrl,
     };
 
     try {
@@ -333,6 +348,7 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <Card className="w-[400px]">
+        {console.log(product)}
         <CardHeader>
           <CardTitle>Edit Product</CardTitle>
         </CardHeader>
@@ -356,6 +372,13 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
             value={reorderLevel}
             onChange={(e) => setReorderLevel(e.target.value)}
             placeholder="Reorder Level"
+          />
+
+          <label className="text-sm font-medium">Image URL</label>
+          <Input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://example.com"
           />
 
           <label className="block text-sm font-medium">
