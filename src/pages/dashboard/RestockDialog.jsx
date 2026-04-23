@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,20 +10,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { restockProduct } from "@/feautures/products/productService";
-
+import { getWarehouseLocations } from "@/feautures/branches/branchService";
 export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState("");
+  const [warehouse, setWarehouse] = useState("");
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadWarehouses() {
+      try {
+        const data = await getWarehouseLocations();
+        setWarehouses(data || []);
+      } catch (err) {
+        console.error("Failed to load warehouses", err);
+      }
+    }
+
+    if (isOpen) loadWarehouses();
+  }, [isOpen]);
 
   if (!product) return null;
 
-  const handleRestock = async () => {
+  async function handleRestock() {
     const qty = Number(quantity);
-    if (!qty || qty <= 0) return;
+
+    if (!qty || qty <= 0) {
+      alert("Enter valid quantity");
+      return;
+    }
+
+    if (!warehouse) {
+      alert("Select a warehouse");
+      return;
+    }
 
     setLoading(true);
+
     try {
-      await restockProduct(product.product_id, product.location_id, qty);
+      await restockProduct(product.product_id, warehouse, qty);
 
       const updated = {
         ...product,
@@ -32,14 +57,15 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
 
       onSuccess(updated);
       setQuantity("");
+      setWarehouse("");
       onClose();
     } catch (err) {
-      console.error("Restock failed:", err);
-      alert("Failed to restock");
-    } finally {
-      setLoading(false);
+      console.error(err);
+      alert("Restock failed");
     }
-  };
+
+    setLoading(false);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,6 +85,23 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
             <Input value={product.stock_quantity || 0} disabled />
           </div>
 
+          {/* Warehouse Selection */}
+          <div>
+            <Label>Warehouse</Label>
+            <select
+              className="w-full border rounded-md p-2"
+              value={warehouse}
+              onChange={(e) => setWarehouse(e.target.value)}
+            >
+              <option value="">Select warehouse</option>
+              {warehouses.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <Label>Quantity to Add</Label>
             <Input
@@ -74,43 +117,12 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
+
           <Button onClick={handleRestock} disabled={loading}>
             {loading ? "Restocking..." : "Restock"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// import { Button } from "@/components/ui/button";
-// import { Edit } from "lucide-react";
-
-function ProductRow({ product, onEdit, onRestock }) {
-  return (
-    <tr>
-      <td>{product.product_name}</td>
-      <td>{product.price}</td>
-      <td>{product.stock_quantity || 0}</td>
-      <td>{product.category_name || "N/A"}</td>
-      <td>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => onRestock(product)}
-          >
-            Restock
-          </Button>
-
-          <div
-            onClick={() => onEdit(product)}
-            className="bg-gray-200 p-1 rounded-sm cursor-pointer hover:bg-gray-300"
-          >
-            <Edit className="size-4 text-gray-600" />
-          </div>
-        </div>
-      </td>
-    </tr>
   );
 }

@@ -27,3 +27,12 @@ export async function getBranchDetails(id) {
     stockVal: stock.data,
   };
 }
+export async function getWarehouseLocations() {
+  const { data, error } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("type", "warehouse");
+
+  if (error) throw error;
+  return data;
+}

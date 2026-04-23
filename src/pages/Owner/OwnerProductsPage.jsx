@@ -18,15 +18,23 @@ import {
   getProducts,
   updateProducts,
 } from "@/feautures/products/productService";
+
 import {
   AddProductDialog,
   AddCategoryDialog,
   AddTagDialog,
 } from "../dashboard/ProductDialog";
+
 import RestockDialog from "../dashboard/RestockDialog";
+
+/* ===========================
+   MAIN PAGE
+=========================== */
+
 export default function OwnerProductsPage() {
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -38,23 +46,35 @@ export default function OwnerProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Load products
+  /* ===========================
+     LOAD PRODUCTS
+  =========================== */
+
   useEffect(() => {
-    async function loadProducts() {
+    async function load() {
+      setLoading(true);
       const data = await getProducts();
-      setProducts(data);
+      setProducts(data || []);
+      setLoading(false);
     }
-    loadProducts();
+    load();
   }, []);
+
+  /* ===========================
+     FILTER PRODUCTS
+  =========================== */
 
   const filteredProducts = useMemo(() => {
     if (!query) return products;
+
     const q = query.toLowerCase();
+
     return products.filter((p) => {
       const name = p.product_name?.toLowerCase() || "";
       const category = p.category_name?.toLowerCase() || "";
       const location = p.location_name?.toLowerCase() || "";
-      const tags = (p.tags || []).join(" ").toLowerCase();
+      const tags = Array.isArray(p.tags) ? p.tags.join(" ").toLowerCase() : "";
+
       return (
         name.includes(q) ||
         category.includes(q) ||
@@ -64,6 +84,10 @@ export default function OwnerProductsPage() {
     });
   }, [query, products]);
 
+  /* ===========================
+     HANDLERS
+  =========================== */
+
   const handleAddSuccess = (newProduct) => {
     setProducts((prev) => {
       const exists = prev.some(
@@ -71,118 +95,91 @@ export default function OwnerProductsPage() {
           p.product_id === newProduct.product_id &&
           p.location_id === newProduct.location_id,
       );
-      if (exists) return prev;
-      return [...prev, newProduct];
+      return exists ? prev : [...prev, newProduct];
     });
   };
 
-  const handleEditSuccess = (updatedProduct) => {
+  const handleEditSuccess = (updated) => {
     setProducts((prev) =>
       prev.map((p) =>
-        p.product_id === updatedProduct.product_id &&
-        p.location_id === updatedProduct.location_id
-          ? updatedProduct
+        p.product_id === updated.product_id &&
+        p.location_id === updated.location_id
+          ? updated
           : p,
       ),
     );
   };
 
+  /* ===========================
+     LOADING
+  =========================== */
+
+  if (loading) {
+    return <div className="p-10 text-center">Loading products...</div>;
+  }
+
+  /* ===========================
+     STATS
+  =========================== */
+
+  const totalProducts = new Set(products.map((p) => p.product_id)).size;
+
+  const outOfStock = products.filter(
+    (p) => !p.stock_quantity || p.stock_quantity <= 0,
+  ).length;
+
+  const lowStock = products.filter(
+    (p) => p.stock_quantity > 0 && p.stock_quantity <= (p.reorder_level || 0),
+  ).length;
+
+  const inventoryValue = products
+    .reduce((acc, p) => acc + (p.price || 0) * (p.stock_quantity || 0), 0)
+    .toLocaleString();
+
   return (
-    <div className="p-1 md:p-4 space-y-4">
-      {/* Stats */}
-      <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Total Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-semibold">
-              {
-                products
-                  .map((p) => p.product_id)
-                  .filter((v, i, a) => a.indexOf(v) === i).length
-              }
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Out Of Stock</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-semibold">
-              {products.filter((p) => p.stock_quantity === 0).length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Low Stock</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-semibold">
-              {
-                products.filter(
-                  (p) =>
-                    p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level,
-                ).length
-              }
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Inventory Value</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-semibold">
-              ₦
-              {products
-                .reduce((acc, p) => acc + p.price * p.stock_quantity, 0)
-                .toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="p-3 space-y-4">
+      {/* ================= STATS ================= */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat title="Total Products" value={totalProducts} />
+        <Stat title="Out Of Stock" value={outOfStock} />
+        <Stat title="Low Stock" value={lowStock} />
+        <Stat title="Inventory Value" value={`₦${inventoryValue}`} />
       </div>
 
-      {/* Products Table */}
+      {/* ================= TABLE ================= */}
       <Card>
-        <CardHeader className="flex flex-col gap-2">
-          <div className="flex justify-between items-center w-full">
-            <CardTitle className="hidden sm:block">Products</CardTitle>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Button onClick={() => setIsDialogOpen(true)}>Add Product</Button>
+        <CardHeader className="flex flex-col gap-3">
+          <div className="flex justify-between">
+            <CardTitle>Products</CardTitle>
+
+            <div className="flex gap-2">
+              <Button onClick={() => setIsDialogOpen(true)}>Add</Button>
               <Button onClick={() => setIsCategoryDialogOpen(true)}>
-                Add Category
+                Category
               </Button>
-              <Button onClick={() => setIsTagDialogOpen(true)}>Add Tag</Button>
+              <Button onClick={() => setIsTagDialogOpen(true)}>Tag</Button>
             </div>
           </div>
-          <div className="flex gap-2  w-full justify-end flex-wrap">
-            <div className="mb-2 w-full max-w-sm">
-              <Input
-                placeholder="Search products..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
+
+          <Input
+            placeholder="Search products..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </CardHeader>
 
         <CardContent>
           <Table>
-            <TableCaption>Product Details</TableCaption>
+            <TableCaption>All Products</TableCaption>
+
             <TableHeader>
-              <TableRow className="bg-muted">
+              <TableRow>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tags</TableHead>
-                <TableHead>Quantity</TableHead>
+                <TableHead>Stock</TableHead>
                 <TableHead>Reorder</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Status</TableHead>
@@ -195,12 +192,12 @@ export default function OwnerProductsPage() {
                 <ProductRow
                   key={`${product.product_id}-${product.location_id}`}
                   product={product}
-                  onEdit={(product) => {
-                    setEditingProduct(product);
+                  onEdit={(p) => {
+                    setEditingProduct(p);
                     setIsEditDialogOpen(true);
                   }}
-                  onRestock={(product) => {
-                    setRestockingProduct(product);
+                  onRestock={(p) => {
+                    setRestockingProduct(p);
                     setIsRestockDialogOpen(true);
                   }}
                 />
@@ -210,26 +207,31 @@ export default function OwnerProductsPage() {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
+      {/* ================= DIALOGS ================= */}
+
       <AddProductDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSuccess={handleAddSuccess}
       />
+
       <AddCategoryDialog
         isOpen={isCategoryDialogOpen}
         onClose={() => setIsCategoryDialogOpen(false)}
       />
+
       <AddTagDialog
         isOpen={isTagDialogOpen}
         onClose={() => setIsTagDialogOpen(false)}
       />
+
       <EditProductDialog
         product={editingProduct}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
         onSuccess={handleEditSuccess}
       />
+
       <RestockDialog
         product={restockingProduct}
         isOpen={isRestockDialogOpen}
@@ -249,12 +251,29 @@ export default function OwnerProductsPage() {
   );
 }
 
-/* ============================= */
-/* Product Row */
-/* ============================= */
+/* ===========================
+   STATS COMPONENT
+=========================== */
+
+function Stat({ title, value }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ===========================
+   PRODUCT ROW
+=========================== */
+
 function ProductRow({ product, onEdit, onRestock }) {
   const {
-    product_id,
     product_name,
     price,
     category_name,
@@ -262,141 +281,101 @@ function ProductRow({ product, onEdit, onRestock }) {
     stock_quantity,
     location_name,
     reorder_level,
+    image_url,
   } = product;
 
-  let stockBadge;
-  if (stock_quantity > reorder_level)
-    stockBadge = <Badge variant="success">In Stock</Badge>;
-  else if (stock_quantity > 0)
-    stockBadge = <Badge variant="warning">Low Stock</Badge>;
-  else stockBadge = <Badge variant="destructive">Out of Stock</Badge>;
+  const reorder = reorder_level || 0;
+
+  let status =
+    stock_quantity > reorder ? "In Stock" : stock_quantity > 0 ? "Low" : "Out";
 
   return (
     <TableRow>
       <TableCell>
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt=""
-            className="size-10 rounded object-cover border"
-          />
+        {image_url ? (
+          <img src={image_url} className="w-10 h-10 object-cover rounded" />
         ) : (
-          <div className="size-10 bg-muted rounded flex items-center justify-center">
-            <ImageIcon className="size-4 text-muted-foreground" />
+          <div className="w-10 h-10 bg-gray-200 flex items-center justify-center rounded">
+            <ImageIcon className="w-4 h-4" />
           </div>
         )}
       </TableCell>
-      <TableCell className="max-w-28 truncate">{product_name}</TableCell>
-      <TableCell>₦{price?.toLocaleString()}</TableCell>
-      <TableCell className="capitalize">{category_name}</TableCell>
-      <TableCell>{tags?.length ? tags.join(", ") : "NULL"}</TableCell>
+
+      <TableCell>{product_name}</TableCell>
+      <TableCell>₦{price}</TableCell>
+      <TableCell>{category_name}</TableCell>
+      <TableCell>{Array.isArray(tags) ? tags.join(", ") : "—"}</TableCell>
+
       <TableCell>{stock_quantity || 0}</TableCell>
-      <TableCell>{reorder_level || 0}</TableCell>
-      <TableCell>{location_name || "N/A"}</TableCell>
-      <TableCell>{stockBadge}</TableCell>
-      <TableCell className={"grid gap-0.5"}>
-        <Button size="sm" variant="success" onClick={() => onRestock(product)}>
+      <TableCell>{reorder}</TableCell>
+      <TableCell>{location_name}</TableCell>
+
+      <TableCell>
+        <Badge>{status}</Badge>
+      </TableCell>
+
+      <TableCell className="flex gap-2">
+        <Button size="sm" onClick={() => onRestock(product)}>
           Restock
         </Button>
-        <Button onClick={() => onEdit(product)} size="sm">
-          Edit
-          <Edit className="size-4 " />
+
+        <Button size="sm" variant="outline" onClick={() => onEdit(product)}>
+          <Edit className="w-4 h-4" />
         </Button>
       </TableCell>
     </TableRow>
   );
 }
 
-/* ============================= */
-/* Edit Product Dialog with Labels */
-/* ============================= */
+/* ===========================
+   EDIT PRODUCT DIALOG (FIXED)
+=========================== */
+
 function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [reorderLevel, setReorderLevel] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [reorder, setReorder] = useState("");
+  const [image, setImage] = useState("");
 
   useEffect(() => {
     if (product) {
-      setName(product.product_name);
-      setPrice(product.price);
-      setReorderLevel(product.reorder_level);
-      setImageUrl(product.image_url || "");
+      setName(product.product_name || "");
+      setPrice(product.price || "");
+      setReorder(product.reorder_level || "");
+      setImage(product.image_url || "");
     }
   }, [product]);
 
   if (!isOpen || !product) return null;
 
-  const handleSave = async () => {
+  const save = async () => {
     const updated = {
       ...product,
       product_name: name,
       price: Number(price),
-      reorder_level: Number(reorderLevel),
-      image_url: imageUrl,
+      reorder_level: Number(reorder),
+      image_url: image,
     };
 
-    try {
-      await updateProducts(updated);
-      onSuccess(updated);
-      onClose();
-    } catch (err) {
-      console.error("Failed to update product:", err);
-    }
+    await updateProducts(updated);
+    onSuccess(updated);
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <Card className="w-[400px]">
-        {console.log(product)}
-        <CardHeader>
-          <CardTitle>Edit Product</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <label className="block text-sm font-medium">Product Name</label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Product Name"
-          />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <Card className="w-[400px] p-4 space-y-3">
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Input value={price} onChange={(e) => setPrice(e.target.value)} />
+        <Input value={reorder} onChange={(e) => setReorder(e.target.value)} />
+        <Input value={image} onChange={(e) => setImage(e.target.value)} />
 
-          <label className="block text-sm font-medium">Price</label>
-          <Input
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price"
-          />
-
-          <label className="block text-sm font-medium">Reorder Level</label>
-          <Input
-            value={reorderLevel}
-            onChange={(e) => setReorderLevel(e.target.value)}
-            placeholder="Reorder Level"
-          />
-
-          <label className="text-sm font-medium">Image URL</label>
-          <Input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com"
-          />
-
-          <label className="block text-sm font-medium">
-            Stock Quantity (Read Only)
-          </label>
-          <Input
-            value={product.stock_quantity}
-            disabled
-            placeholder="Stock Quantity"
-          />
-
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save</Button>
-          </div>
-        </CardContent>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={save}>Save</Button>
+        </div>
       </Card>
     </div>
   );

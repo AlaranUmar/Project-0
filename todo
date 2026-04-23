@@ -1,0 +1,37 @@
+**TO DO**
+.. graph update to weekly daily monthly custom and time
+.. notifications and alerts page.. notifications dot on navbar if notifications
+.. tags edit and add while product creation
+.. single product not multiple branch in products
+.. supabase architecture copy
+.. disable warehouse sales
+.. sales page filtering
+.. staffs add and email
+
+chart optimization data
+filtering with date
+more detailed overlay in charts
+showing monday on week showing time on day showing week on month showing month on year.
+for branchdata the multiple barcharts for a date
+transferspage requestedby approvedby dispatchedby recieved by
+transfers requested vs approved amount
+and reducing 100000 to 100k cos of space
+
+detailed alerts table
+
+expense integration
+
+notifications page
+
+iframe for excel like table
+
+restock feature
+
+product images and page
+
+payment method
+
+logout with timeout
+
+edit tag and category
+loading function when adding tag and category

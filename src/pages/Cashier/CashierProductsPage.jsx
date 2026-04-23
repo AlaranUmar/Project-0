@@ -3,53 +3,56 @@ import { getProducts } from "@/feautures/products/productService";
 import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import CartPanel from "@/feautures/sales/CartPanel";
 import { useCart } from "@/context/CartContext";
 import { getSales, sumSales } from "@/feautures/sales/Sales";
 import { getStaff } from "@/feautures/staff/staffService";
+
 function CashierProductsPage({ profile }) {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [staff, setStaff] = useState(null);
+
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
+
   const totalProducts = products.length;
+
   const lowStock = products.filter(
     (p) => p.stock_quantity <= p.reorder_level && p.stock_quantity > 0,
   ).length;
 
   const outOfStock = products.filter(
-    (p) => p.stock_quantity === null || p.stock_quantity === 0,
+    (p) => !p.stock_quantity || p.stock_quantity === 0,
   ).length;
 
   useEffect(() => {
-    async function loadProducts() {
-      setLoading(true);
-      const data = await getProducts();
-      setProducts(data || []);
-      setLoading(false);
-    }
-    async function fetchStaff() {
-      setLoading(true);
-      const data = await getStaff(profile.id);
-      setStaff(data);
-      setLoading(false);
-    }
-    async function fetchSales() {
-      setLoading(true);
-      const data = await getSales();
-      setSales(data);
-      setLoading(false);
+    async function load() {
+      try {
+        setLoading(true);
+
+        const [productData, staffData, salesData] = await Promise.all([
+          getProducts(),
+          getStaff(profile.id),
+          getSales(),
+        ]);
+
+        setProducts(productData || []);
+        setStaff(staffData);
+        setSales(salesData || []);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchStaff();
-    loadProducts();
-    fetchSales();
+    load();
   }, [profile.id]);
+
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
@@ -73,53 +76,29 @@ function CashierProductsPage({ profile }) {
     return filtered;
   }, [products, query, category]);
 
-  if (loading) return <Loader />;
+  if (loading)
+    return (
+      <div className="flex justify-center p-10">
+        <Loader className="animate-spin" />
+      </div>
+    );
+
   return (
     <div className="p-4 flex flex-col gap-4">
+      {/* Stats */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">Total Products</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">{totalProducts}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">Low Stock</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">{lowStock}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">Out Of Stock</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">{outOfStock}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">Total Sales</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">
-              ₦{sumSales(sales).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard title="Total Products" value={totalProducts} />
+        <StatCard title="Low Stock" value={lowStock} />
+        <StatCard title="Out Of Stock" value={outOfStock} />
+        <StatCard
+          title="Total Sales"
+          value={`₦${sumSales(sales).toLocaleString()}`}
+        />
       </div>
 
+      {/* POS Layout */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* Products */}
         <div className="col-span-8 flex flex-col gap-4">
           <Input
             placeholder="Search products..."
@@ -131,7 +110,7 @@ function CashierProductsPage({ profile }) {
             <TabsList className="w-full">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="school">School</TabsTrigger>
-              <TabsTrigger value="kitchen and Dining">Kitchen</TabsTrigger>
+              <TabsTrigger value="kitchen and dining">Kitchen</TabsTrigger>
               <TabsTrigger value="electronics">Electronics</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -143,6 +122,7 @@ function CashierProductsPage({ profile }) {
           </div>
         </div>
 
+        {/* Cart */}
         <div className="col-span-8 md:col-span-4">
           <CartPanel profile={profile} staff={staff} />
         </div>
@@ -153,15 +133,13 @@ function CashierProductsPage({ profile }) {
 
 export default CashierProductsPage;
 
-function ProductCard({ product }) {
+const ProductCard = React.memo(function ProductCard({ product }) {
   const { addToCart } = useCart();
-  function inStock(product) {
-    if (product.stock_quantity <= 0 || product.stock_quantity === null) {
-      return true;
-    } else {
-      return false;
-    }
+
+  function isOutOfStock(product) {
+    return !product.stock_quantity || product.stock_quantity <= 0;
   }
+
   return (
     <Card className="cursor-pointer transition hover:-translate-y-1">
       <CardContent className="p-2 flex flex-col gap-2">
@@ -173,7 +151,6 @@ function ProductCard({ product }) {
           />
         </div>
 
-        {/* Product Info */}
         <div className="flex justify-between items-center">
           <p className="text-sm font-medium truncate max-w-30">
             {product.product_name}
@@ -183,16 +160,31 @@ function ProductCard({ product }) {
         </div>
 
         <p className="text-sm text-muted-foreground font-semibold">
-          ₦{product.price}
+          ₦{product.price?.toLocaleString()}
         </p>
+
         <Button
-          disabled={inStock(product)}
+          disabled={isOutOfStock(product)}
           size="sm"
           className="w-full"
           onClick={() => addToCart(product)}
         >
           Add
         </Button>
+      </CardContent>
+    </Card>
+  );
+});
+
+function StatCard({ title, value }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="text-sm">{title}</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <div className="text-xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );

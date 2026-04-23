@@ -55,17 +55,13 @@ export async function createTag(name) {
 }
 
 export async function restockProduct(productId, locationId, quantity) {
-  const { data, error } = await supabase.from("stock_movements").insert({
-    product_id: productId,
-    location_id: locationId,
-    quantity_change: quantity,
-    movement_type: "restock",
-    notes: "Manual restock",
+  const { error } = await supabase.rpc("restock_product", {
+    p_product_id: productId,
+    p_location_id: locationId,
+    p_quantity: quantity,
   });
 
   if (error) throw error;
-
-  return data;
 }
 
 export async function createProduct(product) {
