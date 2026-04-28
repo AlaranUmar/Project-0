@@ -8,13 +8,12 @@ export async function checkoutCart(
   customerId = null,
 ) {
   if (!cart?.length) throw new Error("Cart is empty");
-  if (!payments?.length) throw new Error("Payment method required");
+  if (!payments?.length) throw new Error("Payment required");
   if (!profile?.id) throw new Error("Invalid user");
-  if (!locationId) throw new Error("Location not set");
+  if (!locationId) throw new Error("No location");
 
-  // Only send what backend needs
   const items = cart.map((item) => ({
-    product_id: item.product_id,
+    product_id: item.id,
     quantity: item.quantity,
   }));
 

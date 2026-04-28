@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,10 +10,20 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
+import { Loader2, X, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import {
   approveTransfer,
   rejectTransfer,
 } from "@/feautures/transfer/transferService";
-
+import { getLocations } from "@/feautures/branches/branchService";
 export default function TransferOverlay({
   transferId,
   transfers,
@@ -21,195 +32,169 @@ export default function TransferOverlay({
   onRefresh,
 }) {
   const transfer = transfers.find((t) => t.id === transferId);
-  const isEditable = transfer?.status === "pending";
-
-  const [selectedItems, setSelectedItems] = useState(() =>
-    transfer.items.reduce((acc, item) => {
-      acc[item.product_id] = { quantity: item.quantity, approved: undefined };
-      return acc;
-    }, {}),
+  const [locations, setLocations] = useState([]);
+  const [selectedSource, setSelectedSource] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedItems, setSelectedItems] = useState(
+    () =>
+      transfer?.items?.reduce((acc, item) => {
+        acc[item.product_id] = { quantity: item.quantity, approved: true };
+        return acc;
+      }, {}) || {},
   );
 
-  const [selectedSourceBranch, setSelectedSourceBranch] = useState(null);
-
-  const getAvailableStock = (productId) => {
-    if (!selectedSourceBranch) return 0;
-
-    const branchProducts = products.filter(
-      (p) => String(p.location_id) === String(selectedSourceBranch),
+  useEffect(() => {
+    getLocations().then((data) =>
+      setLocations(data.filter((l) => l.id !== transfer?.to_location_id)),
     );
-
-    const product = branchProducts.find((p) => p.product_id === productId);
-
-    return product?.stock_quantity || 0;
-  };
-
-  const handleQuantityChange = (productId, value) => {
-    const maxStock = getAvailableStock(productId);
-    const quantity = Math.min(Number(value), maxStock);
-
-    setSelectedItems((prev) => ({
-      ...prev,
-      [productId]: { ...prev[productId], quantity },
-    }));
-  };
-
-  const toggleItemApproval = (productId, approved) => {
-    if (!isEditable) return;
-
-    setSelectedItems((prev) => {
-      const current = prev[productId];
-      const newApproved = current?.approved === approved ? undefined : approved;
-
-      return {
-        ...prev,
-        [productId]: { ...current, approved: newApproved },
-      };
-    });
-  };
-
-  const allRejected = Object.values(selectedItems).every(
-    (i) => i.approved === false,
-  );
-
-  const canSubmit =
-    isEditable &&
-    (allRejected ||
-      (selectedSourceBranch &&
-        Object.values(selectedItems).every((i) => i.approved !== undefined)));
+  }, [transfer]);
 
   const handleSubmit = async () => {
+    const decisions = Object.entries(selectedItems).map(([id, val]) => ({
+      product_id: id,
+      approved: val.approved,
+      quantity: val.quantity,
+    }));
+    const allRejected = decisions.every((i) => !i.approved);
+    if (!selectedSource && !allRejected)
+      return toast.error("Select Source Branch");
+
+    setIsSubmitting(true);
     try {
-      const items = Object.entries(selectedItems).map(
-        ([product_id, { approved, quantity }]) => ({
-          product_id,
-          approved,
-          quantity,
-        }),
-      );
-
-      if (allRejected) {
-        await rejectTransfer(transferId);
-      } else {
-        await approveTransfer(transferId, items, selectedSourceBranch);
-      }
-
-      onClose();
+      if (allRejected) await rejectTransfer(transferId);
+      else await approveTransfer(transferId, decisions, selectedSource);
       onRefresh();
+      onClose();
     } catch (err) {
-      console.error(err);
-      alert("Error submitting decisions");
+      toast.error(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const branchesWithStock = products.reduce((acc, p) => {
-    if (!acc.find((b) => b.location_id === p.location_id)) {
-      acc.push({
-        location_id: p.location_id,
-        branch_name: p.location_name,
-      });
-    }
-    return acc;
-  }, []);
+  if (!transfer) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/30 flex justify-center items-start p-4 z-50"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-white h-fit rounded-lg shadow-lg p-4 max-w-xl w-full">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold">
-            Transfer {transferId.slice(0, 8)}
-          </h3>
-
-          <Button variant="destructive" size="sm" onClick={onClose}>
-            Close
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center px-4 z-50">
+      <Card className="max-w-2xl w-full">
+        <CardHeader className="flex flex-row items-center justify-between border-b">
+          <CardTitle>Transfer Review</CardTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X />
           </Button>
-        </div>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          <Select value={selectedSource} onValueChange={setSelectedSource}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose Origin Branch..." />
+            </SelectTrigger>
+            <SelectContent>
+              {locations.map((loc) => (
+                <SelectItem key={loc.id} value={loc.id}>
+                  {loc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {/* Source Branch */}
-        {isEditable &&
-          Object.values(selectedItems).some((i) => i.approved !== false) && (
-            <Select
-              value={selectedSourceBranch || ""}
-              onValueChange={setSelectedSourceBranch}
-              disabled={!isEditable}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select source branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {branchesWithStock.map((b) => (
-                  <SelectItem key={b.location_id} value={b.location_id}>
-                    {b.branch_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-        {/* Items */}
-        <div className="space-y-2 mt-4 h-fit overflow-y-auto">
-          {transfer.items.map((item) => {
-            const stock = getAvailableStock(item.product_id);
-            const itemState = selectedItems[item.product_id];
-
-            return (
-              <div
-                key={item.product_id}
-                className={`flex items-center gap-2 flex-wrap p-2 rounded 
-                ${itemState.approved === true ? "bg-green-100" : ""}
-                ${itemState.approved === false ? "bg-red-100" : ""}`}
-              >
-                <span className="bg-gray-100 px-2 py-1 rounded text-sm">
-                  {item.product_name} (Available: {stock})
-                </span>
-
-                <Input
-                  type="number"
-                  min={0}
-                  max={stock}
-                  value={itemState.quantity}
-                  onChange={(e) =>
-                    handleQuantityChange(item.product_id, e.target.value)
-                  }
-                  disabled={!isEditable || itemState.approved === false}
-                  className="w-20"
-                />
-
-                <Button
-                  size="xs"
-                  disabled={!isEditable}
-                  onClick={() => toggleItemApproval(item.product_id, true)}
-                >
-                  {itemState.approved === true ? "Cancel" : "Approve"}
-                </Button>
-
-                <Button
-                  size="xs"
-                  variant="destructive"
-                  disabled={!isEditable}
-                  onClick={() => toggleItemApproval(item.product_id, false)}
-                >
-                  {itemState.approved === false ? "Cancel" : "Reject"}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Submit */}
-        {isEditable && (
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-center">Qty</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transfer.items?.map((item) => {
+                  const p = products.find(
+                    (prod) => prod.id === item.product_id,
+                  );
+                  const state = selectedItems[item.product_id];
+                  return (
+                    <TableRow
+                      key={item.product_id}
+                      className={!state?.approved ? "opacity-30" : ""}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={p?.image_url}
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                          <p className="text-xs font-bold line-clamp-1">
+                            {p?.name}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={state?.quantity}
+                          disabled={!state?.approved}
+                          onChange={(e) =>
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.product_id]: {
+                                ...prev[item.product_id],
+                                quantity: Number(e.target.value),
+                              },
+                            }))
+                          }
+                          className="w-16 mx-auto h-8 text-center"
+                        />
+                      </TableCell>
+                      <TableCell className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant={state?.approved ? "default" : "outline"}
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.product_id]: {
+                                ...prev[item.product_id],
+                                approved: true,
+                              },
+                            }))
+                          }
+                        >
+                          <CheckCircle2 className="h-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant={!state?.approved ? "destructive" : "outline"}
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.product_id]: {
+                                ...prev[item.product_id],
+                                approved: false,
+                              },
+                            }))
+                          }
+                        >
+                          <XCircle className="h-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
           <Button
-            className="mt-4 w-full"
+            className="w-full h-12 font-bold"
             onClick={handleSubmit}
-            disabled={!canSubmit}
+            disabled={isSubmitting}
           >
-            Submit Decisions
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}
+            Confirm Transfer
           </Button>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

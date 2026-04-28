@@ -8,50 +8,49 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatCompactNaira } from "@/utils/formatting";
 
 function BranchSalesChart({ data }) {
   return (
-    <div className="h-9/10 w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f0f0f0"
+          />
           <XAxis
             dataKey="branch"
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#888", fontSize: 12 }}
-            className="capitalize" // Capitalize branch names
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#888", fontSize: 12 }}
-            tickFormatter={(value) => `₦${value.toLocaleString()}`} // Formats for currency
+            tick={{ fill: "#888", fontSize: 11 }}
+            tickFormatter={(value) => formatCompactNaira(value)}
           />
           <Tooltip
-            cursor={{ fill: "#f5f5f5" }}
-            contentStyle={{
-              borderRadius: "8px",
-              border: "none",
-              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-            }}
-            formatter={(value) => [`₦${value.toLocaleString()}`, "Sales"]}
+            cursor={{ fill: "#f8fafc" }}
+            contentStyle={{ borderRadius: "8px", border: "none shadow-lg" }}
+            formatter={(value) => [formatCompactNaira(value), "Sales"]}
           />
-          <Legend verticalAlign="bottom" align="right" iconType="circle" />
+          <Legend verticalAlign="top" align="right" iconType="rect" />
           <Bar
-            dataKey="sales" // MUST MATCH THE KEY IN YOUR DATA
+            dataKey="sales"
             name="Total Sales"
             fill="#3b82f6"
             radius={[4, 4, 0, 0]}
-            barSize={40}
+            barSize={30}
           />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 }
-
 export default BranchSalesChart;

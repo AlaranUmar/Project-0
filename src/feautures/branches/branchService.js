@@ -1,7 +1,11 @@
 import { supabase } from "@/lib/supabaseClient";
 
-export async function getBranches() {
-  const { data, error } = await supabase.from("branch_staff_view").select("*");
+export async function getLocations() {
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name, type, is_active")
+    .eq("is_active", true); // Only show operational branches
+
   if (error) throw error;
   return data;
 }

@@ -1,114 +1,91 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { getProducts } from "@/feautures/products/productService";
 
 export function useReports(
   startDate,
   endDate,
-  type = "owner",
   selectedBranch = "all",
+  view = "day", // today, week, month, year
 ) {
-  const [data, setData] = useState([]);
+  const [summary, setSummary] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalSales, setTotalSales] = useState(0);
-  const [totalExpense, setTotalExpense] = useState(0);
-  const [totalInventoryValue, setTotalInventoryValue] = useState(0);
-  const [totalProfit, setTotalProfit] = useState(0);
-  const [products, setProducts] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [branchSalesData, setBranchSalesData] = useState([]);
-  const [revenueExpenseData, setRevenueExpenseData] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!startDate || !endDate) return;
+
+    let isMounted = true;
 
     const fetchReports = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const productData = await getProducts();
-        setProducts(productData);
+        // 🔹 Determine bucket dynamically
+        let bucket = "day";
+        if (view === "today") bucket = "hour";
+        else if (view === "week") bucket = "day";
+        else if (view === "month") bucket = "day";
+        else if (view === "year") bucket = "month";
 
-        const rpcName =
-          type === "owner" ? "get_owner_reports" : "get_daily_financials";
-
-        const { data: reportData, error: dbError } = await supabase.rpc(
-          rpcName,
-          {
+        // 🔹 Parallel requests (faster)
+        const [dashboardRes, timelineRes] = await Promise.all([
+          supabase.rpc("get_owner_dashboard", {
             start_date: startDate,
             end_date: endDate,
-          },
-        );
+            selected_branch: selectedBranch,
+          }),
+          supabase.rpc("get_sales_timeline", {
+            start_date: startDate,
+            end_date: endDate,
+            bucket,
+          }),
+        ]);
 
-        if (dbError) throw dbError;
-        setBranches(reportData);
+        if (dashboardRes.error) throw dashboardRes.error;
+        if (timelineRes.error) throw timelineRes.error;
 
-        const filteredData =
-          selectedBranch === "all"
-            ? reportData
-            : reportData.filter(
-                (item) =>
-                  item.branch_name?.toLowerCase() ===
-                  selectedBranch.toLowerCase(),
-              );
-
-        const sales = filteredData.reduce(
-          (acc, b) => acc + (b.total_sales || 0),
-          0,
-        );
-
-        const expenses = filteredData.reduce(
-          (acc, b) => acc + (b.total_expenses || 0),
-          0,
-        );
-
-        const inventory = filteredData.reduce(
-          (acc, b) => acc + (b.inventory_value || 0),
-          0,
-        );
-        const branchSalesData = filteredData
-          .filter((b) => b.branch_type !== "warehouse")
-          .map((b) => ({
-            branch: b.branch_name,
-            sales: b.total_sales || 0,
-          }));
-        const revenueExpenseData = filteredData.map((b) => ({
-          branch: b.branch_name,
-          revenue: b.total_sales || 0,
-          expense: b.total_expenses || 0,
-        }));
-        setBranchSalesData(branchSalesData);
-        setRevenueExpenseData(revenueExpenseData);
-        setData(filteredData);
-        setTotalSales(sales);
-        setTotalInventoryValue(inventory);
-        setTotalProfit(sales - expenses);
-        setTotalExpense(expenses);
+        if (isMounted) {
+          setSummary(dashboardRes.data || []);
+          setTimeline(timelineRes.data || []);
+        }
       } catch (err) {
         console.error(err);
-        setError(err);
-        setData([]);
+        if (isMounted) {
+          setError(err);
+          setSummary([]);
+          setTimeline([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchReports();
-  }, [startDate, endDate, type, selectedBranch]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [startDate, endDate, selectedBranch, view]);
+
+  // 🔹 Derived values (lightweight, safe)
+  const totals = summary.reduce(
+    (acc, b) => {
+      acc.sales += Number(b.total_sales || 0);
+      acc.expenses += Number(b.total_expenses || 0);
+      acc.profit += Number(b.profit || 0);
+      acc.inventory += Number(b.inventory_value || 0);
+      return acc;
+    },
+    { sales: 0, expenses: 0, profit: 0, inventory: 0 },
+  );
 
   return {
-    data,
+    summary,
+    timeline,
+    totals,
     loading,
     error,
-    totalSales,
-    totalInventoryValue,
-    totalProfit,
-    totalExpense,
-    products,
-    branches,
-    branchSalesData,
-    revenueExpenseData,
   };
 }

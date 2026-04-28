@@ -2,17 +2,30 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function getSales() {
   const { data, error } = await supabase
-    .from("sales_with_items")   
-    .select("*")
+    .from("sales")
+    .select(
+      `
+      *,
+      items:sale_items(
+        *,
+        product:products(name, image_url)
+      )
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("Error fetching sales:", error);
     return [];
   }
-
   return data;
 }
+
+/**
+ * Safely sums the total amount of sales.
+ * Uses the 'amount' column directly from the sales table.
+ */
 export function sumSales(sales) {
-  return sales.reduce((total, sale) => total + sale.amount, 0);
+  if (!sales) return 0;
+  return sales.reduce((total, sale) => total + Number(sale.amount || 0), 0);
 }

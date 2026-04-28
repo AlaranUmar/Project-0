@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Dialog,
@@ -18,46 +18,75 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { handle_request } from "./transferService";
 
 export default function RequestTransferModal({
   open,
   onClose,
-  products,
-  branchId,
+  products = [],
+  onSubmit,
 }) {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Get all currently selected IDs to filter them out later
-  const selectedIds = items.map((item) => item.product_id);
+  // Reset + auto-add first row
+  useEffect(() => {
+    if (open) {
+      setItems([{ product_id: "", quantity: 1 }]);
+    } else {
+      setItems([]);
+    }
+  }, [open]);
 
-  const addItem = () => {
-    // Only add if there are still products left to pick
+  const selectedIds = items.map((i) => String(i.product_id));
+
+  function addItem() {
     if (items.length >= products.length) return;
-    setItems([...items, { product_id: "", quantity: 1 }]);
-  };
+    setItems((prev) => [...prev, { product_id: "", quantity: 1 }]);
+  }
 
-  const updateItem = (index, field, value) => {
-    const copy = [...items];
-    // Force minimum of 1 for quantity
-    const finalValue =
-      field === "quantity" ? Math.max(1, Number(value)) : value;
-    copy[index][field] = finalValue;
-    setItems(copy);
-  };
+  function updateItem(index, field, value) {
+    setItems((prev) => {
+      const copy = [...prev];
 
-  const removeItem = (index) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+      copy[index][field] =
+        field === "quantity" ? Math.max(1, Number(value) || 1) : String(value);
 
-  const submit = async () => {
-    // Basic validation: ensure all items have a product selected
-    if (items.length === 0 || items.some((i) => !i.product_id)) return;
-    await handle_request(branchId, items);
-    setItems([]);
-    onClose();
-  };
+      return copy;
+    });
+  }
 
+  function removeItem(index) {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function submit() {
+    if (!items.length) {
+      return alert("Add at least one product");
+    }
+
+    if (items.some((i) => !i.product_id)) {
+      return alert("Select all products");
+    }
+
+    const unique = new Set(items.map((i) => i.product_id));
+    if (unique.size !== items.length) {
+      return alert("Duplicate products selected");
+    }
+
+    setLoading(true);
+
+    try {
+      console.log("Submitting items:", items);
+
+      await onSubmit(items);
+      onClose();
+    } catch (err) {
+      console.error("MODAL ERROR:", err);
+      alert(err.message || "Failed to submit request");
+    }
+
+    setLoading(false);
+  }
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -72,28 +101,21 @@ export default function RequestTransferModal({
                 value={item.product_id}
                 onValueChange={(value) => updateItem(i, "product_id", value)}
               >
-                {/* 1. FIX OVERFLOW: Set a fixed width and truncate on the trigger */}
                 <SelectTrigger className="w-[180px] md:w-[220px]">
-                  <SelectValue
-                    placeholder="Select product"
-                    className="truncate"
-                  />
+                  <SelectValue placeholder="Select product" />
                 </SelectTrigger>
 
                 <SelectContent>
                   {products.map((p) => {
-                    const isSelectedElsewhere =
-                      selectedIds.includes(p.product_id) &&
-                      item.product_id !== p.product_id;
+                    const id = String(p.id);
+
+                    const isUsed =
+                      selectedIds.includes(id) && item.product_id !== id;
 
                     return (
-                      <SelectItem
-                        key={p.product_id}
-                        value={p.product_id}
-                        disabled={isSelectedElsewhere}
-                      >
-                        <span className="block truncate max-w-50">
-                          {p.product_name}
+                      <SelectItem key={id} value={id} disabled={isUsed}>
+                        <span className="truncate block max-w-[180px]">
+                          {p.name}
                         </span>
                       </SelectItem>
                     );
@@ -109,14 +131,15 @@ export default function RequestTransferModal({
                 onChange={(e) => updateItem(i, "quantity", e.target.value)}
               />
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeItem(i)}
-                className="text-destructive"
-              >
-                ✕
-              </Button>
+              {items.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeItem(i)}
+                >
+                  ✕
+                </Button>
+              )}
             </div>
           ))}
 
@@ -124,7 +147,7 @@ export default function RequestTransferModal({
             variant="outline"
             className="w-full"
             onClick={addItem}
-            disabled={items.length >= products.length} // Prevent adding more rows than products
+            disabled={items.length >= products.length}
           >
             + Add Item
           </Button>
@@ -134,8 +157,9 @@ export default function RequestTransferModal({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={items.length === 0}>
-            Submit Request
+
+          <Button onClick={submit} disabled={loading}>
+            {loading ? "Submitting..." : "Submit Request"}
           </Button>
         </DialogFooter>
       </DialogContent>
