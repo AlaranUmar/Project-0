@@ -15,8 +15,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-
-import { getLocations } from "@/feautures/products/productService";
+import { getLocations } from "../branches/branchService";
 
 export default function CreateTransferModal({
   open,
@@ -91,7 +90,6 @@ export default function CreateTransferModal({
     setLoading(true);
 
     try {
-      console.log(fromBranch, toBranch);
       await onSubmit({
         from_location_id: fromBranch,
         to_location_id: toBranch,

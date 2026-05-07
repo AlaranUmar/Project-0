@@ -1,5 +1,5 @@
+import React, { useMemo } from "react";
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -7,130 +7,237 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceArea,
+  Area,
+  ComposedChart,
 } from "recharts";
+import {
+  format,
+  startOfToday,
+  endOfToday,
+  eachHourOfInterval,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  startOfYear,
+  endOfYear,
+  eachMonthOfInterval,
+  eachWeekOfInterval,
+  isSameDay,
+  isSameHour,
+  isSameMonth,
+} from "date-fns";
 import { formatCompactNaira } from "@/utils/formatting";
 
+const BUSINESS_START = 4;
+const BUSINESS_END = 21;
+
 /**
- * 📊 Revenue vs Expense Chart
+ * Prepare chart data with continuous timeline + O(n) lookup
  */
-function RevenueExpenseChart({ data = [], view }) {
-  // ✅ Handle empty or undefined data safely
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-        No data available
-      </div>
-    );
+const prepareChartData = (view, rawData) => {
+  const now = new Date();
+  let skeleton = [];
+
+  // 🔹 Create timeline skeleton
+  switch (view) {
+    case "today":
+      skeleton = eachHourOfInterval({
+        start: startOfToday(),
+        end: endOfToday(),
+      });
+      break;
+
+    case "week":
+      skeleton = eachDayOfInterval({
+        start: startOfWeek(now, { weekStartsOn: 1 }),
+        end: endOfWeek(now, { weekStartsOn: 1 }),
+      });
+      break;
+
+    case "month":
+      skeleton = eachWeekOfInterval({
+        start: new Date(now.getFullYear(), now.getMonth(), 1),
+        end: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+        weekStartsOn: 1,
+      });
+      break;
+
+    case "year":
+      skeleton = eachMonthOfInterval({
+        start: startOfYear(now),
+        end: endOfYear(now),
+      });
+      break;
+
+    case "all":
+    default:
+      return [...rawData].sort((a, b) => new Date(a.name) - new Date(b.name));
   }
 
-  /**
-   * 🧠 Format X-axis labels based on selected view
-   */
-  const formatXAxis = (value) => {
-    try {
-      const date = new Date(value);
+  // 🔹 Index raw data (O(n))
+  const indexed = new Map();
 
-      switch (view) {
-        case "today":
-          return date.toLocaleTimeString([], { hour: "2-digit" });
+  rawData.forEach((d) => {
+    const date = new Date(d.name);
+    let key;
 
-        case "week":
-          return date.toLocaleDateString([], { weekday: "short" });
+    if (view === "today") key = date.setMinutes(0, 0, 0);
+    else if (view === "week") key = date.setHours(0, 0, 0, 0);
+    else if (view === "month") {
+      key = startOfWeek(date, { weekStartsOn: 1 }).getTime();
+    } else if (view === "year") {
+      key = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+    }
 
-        case "month":
-          return date.toLocaleDateString([], { day: "numeric" });
+    indexed.set(key, d);
+  });
 
-        case "year":
-          return date.toLocaleDateString([], { month: "short" });
+  // 🔹 Merge skeleton + data
+  return skeleton.map((tickDate) => {
+    let key;
 
-        default:
-          return date.toLocaleDateString();
+    if (view === "today") key = tickDate.setMinutes(0, 0, 0);
+    else if (view === "week") key = tickDate.setHours(0, 0, 0, 0);
+    else if (view === "month") {
+      key = startOfWeek(tickDate, { weekStartsOn: 1 }).getTime();
+    } else if (view === "year") {
+      key = new Date(tickDate.getFullYear(), tickDate.getMonth(), 1).getTime();
+    }
+
+    return (
+      indexed.get(key) || {
+        name: key, // timestamp (NO timezone bugs)
+        revenue: 0,
+        expense: 0,
       }
-    } catch {
-      return value;
+    );
+  });
+};
+
+function RevenueExpenseChart({ data = [], view }) {
+  const chartData = useMemo(() => prepareChartData(view, data), [data, view]);
+
+  const formatXAxis = (value) => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+
+    switch (view) {
+      case "today":
+        return format(date, "ha");
+      case "week":
+        return format(date, "EEE");
+      case "month":
+        return `W${Math.ceil(date.getDate() / 7)}`;
+      case "year":
+        return format(date, "MMM");
+      default:
+        return format(date, "MMM d");
     }
   };
 
-  /**
-   * 💬 Custom Tooltip (cleaner UI)
-   */
   const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || payload.length === 0) return null;
+    if (!active || !payload?.length) return null;
 
     return (
-      <div className="bg-white p-3 rounded-lg shadow-md border text-xs">
-        <p className="font-semibold mb-1">{formatXAxis(label)}</p>
-        {payload.map((entry, index) => (
-          <div key={index} className="flex justify-between gap-4">
-            <span className="text-muted-foreground">{entry.name}</span>
-            <span className="font-medium">
-              {formatCompactNaira(entry.value)}
+      <div className="bg-white p-4 rounded-lg shadow-lg border border-slate-100 text-xs">
+        <p className="font-bold mb-2 text-slate-500">{formatXAxis(label)}</p>
+
+        {payload.map((entry, i) => (
+          <div key={i} className="flex justify-between gap-6 mb-1">
+            <span style={{ color: entry.color }} className="font-medium">
+              {entry.name}:
             </span>
+            <span className="font-bold">{formatCompactNaira(entry.value)}</span>
           </div>
         ))}
       </div>
     );
   };
 
+  // 🔹 Empty state
+  if (!chartData.length) {
+    return (
+      <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+        No data available
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={data}
-        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+      <ComposedChart
+        data={chartData}
+        margin={{ top: 10, right: 10, left: 5, bottom: 0 }}
       >
-        {/* Grid */}
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+        <defs>
+          <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.1} />
+            <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+          </linearGradient>
+        </defs>
 
-        {/* X Axis */}
-        <XAxis
-          dataKey="name"
-          tick={{ fill: "#888", fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
-          tickFormatter={formatXAxis}
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#f0f0f0"
         />
 
-        {/* Y Axis */}
+        <XAxis
+          dataKey="name"
+          tickFormatter={formatXAxis}
+          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          axisLine={false}
+          tickLine={false}
+          minTickGap={10}
+        />
+
         <YAxis
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#888", fontSize: 11 }}
+          tick={{ fill: "#94a3b8", fontSize: 11 }}
           tickFormatter={(value) => formatCompactNaira(value)}
         />
 
-        {/* Tooltip */}
         <Tooltip content={<CustomTooltip />} />
 
-        {/* Legend */}
         <Legend
           verticalAlign="top"
           align="right"
           iconType="circle"
-          wrapperStyle={{ fontSize: "12px" }}
+          wrapperStyle={{ paddingBottom: "20px", fontSize: "12px" }}
         />
 
-        {/* Revenue Line */}
+        {/* 🔹 Business Hours Highlight */}
+        {view === "today" && (
+          <ReferenceArea
+            x1={new Date().setHours(BUSINESS_START, 0, 0, 0)}
+            x2={new Date().setHours(BUSINESS_END, 0, 0, 0)}
+            fill="#f8fafc"
+            strokeOpacity={0.3}
+          />
+        )}
+
         <Line
           type="monotone"
           dataKey="revenue"
           name="Revenue"
-          stroke="#16a34a" // green (better semantic)
+          stroke="#16a34a"
           strokeWidth={3}
-          dot={false}
-          activeDot={{ r: 6 }}
+          dot={chartData.length < 32}
+          activeDot={{ r: 6, strokeWidth: 0 }}
         />
 
-        {/* Expense Line */}
         <Line
           type="monotone"
           dataKey="expense"
           name="Expense"
-          stroke="#dc2626" // red (better semantic)
-          strokeWidth={3}
+          stroke="#dc2626"
+          strokeWidth={2}
+          strokeDasharray="5 5"
           dot={false}
-          activeDot={{ r: 6 }}
         />
-      </LineChart>
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

@@ -28,6 +28,7 @@ import {
   AddTagDialog,
 } from "../dashboard/ProductDialog";
 import RestockDialog from "../dashboard/RestockDialog";
+import { toast } from "sonner";
 
 /* =========================== MAIN PAGE =========================== */
 export default function OwnerProductsPage() {
@@ -281,7 +282,9 @@ function ProductRow({ product, onEdit, onRestock }) {
           </div>
         )}
       </TableCell>
-      <TableCell className="font-medium">{product.name}</TableCell>
+      <TableCell className="font-medium truncate max-w-12.5">
+        {product.name}
+      </TableCell>
       <TableCell>₦{Number(product.price).toLocaleString()}</TableCell>
       <TableCell>
         <Badge variant="outline" className="font-normal">
@@ -371,8 +374,9 @@ function EditProductDialog({ product, isOpen, onClose, onSuccess }) {
       });
       onSuccess();
       onClose();
+      toast.success("Product updated successfully");
     } catch (err) {
-      alert("Failed to update product");
+      toast.error(err.message || "Failed to update product");
     } finally {
       setIsSaving(false);
     }

@@ -13,8 +13,8 @@ import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 
 import { formatCompactNaira } from "@/utils/formatting";
 
-function OwnerDashboard() {
-  const [dateRange, setDateRange] = useState("today");
+export default function OwnerDashboard() {
+  const [dateRange, setDateRange] = useState("month");
 
   // ✅ Prevent unnecessary recalculation
   const [startDate, endDate] = useMemo(
@@ -29,7 +29,6 @@ function OwnerDashboard() {
     "all",
     dateRange,
   );
-
   // 🔴 Loading State
   if (loading) {
     return (
@@ -64,7 +63,7 @@ function OwnerDashboard() {
   }));
 
   const revenueExpenseData = timeline.map((t) => ({
-    name: formatChartLabel(t.period, dateRange),
+    name: t.period, // Don't format here!
     revenue: Number(t.total_sales || 0),
     expense: Number(t.total_expenses || 0),
   }));
@@ -72,8 +71,7 @@ function OwnerDashboard() {
   return (
     <div className="p-3 space-y-4">
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-card p-3 rounded-lg border shadow-sm">
-        <h1 className="text-xl font-bold tracking-tight">Business Overview</h1>
+      <div className="flex justify-end items-center p-3 rounded-lg border">
         <DateRangeSelector onChange={setDateRange} value={dateRange} />
       </div>
 
@@ -110,7 +108,6 @@ function OwnerDashboard() {
             </div>
           </CardContent>
         </Card>
-
         {/* Branch Performance */}
         <Card className="md:col-span-3 w-full">
           <CardHeader>
@@ -122,12 +119,10 @@ function OwnerDashboard() {
             </div>
           </CardContent>
         </Card>
-
         {/* LOGS */}
         <div className="col-span-1 md:col-span-3">
           <RecentStockMovement />
         </div>
-
         {/* ALERTS */}
         <div className="col-span-1 md:col-span-2">
           <Alerts />
@@ -136,35 +131,6 @@ function OwnerDashboard() {
     </div>
   );
 }
-
-/**
- * 📊 Chart Label Formatter (handles time buckets properly)
- */
-function formatChartLabel(date, view) {
-  try {
-    const d = new Date(date);
-
-    switch (view) {
-      case "today":
-        return d.toLocaleTimeString([], { hour: "2-digit" });
-
-      case "week":
-        return d.toLocaleDateString([], { weekday: "short" });
-
-      case "month":
-        return d.toLocaleDateString([], { day: "numeric" });
-
-      case "year":
-        return d.toLocaleDateString([], { month: "short" });
-
-      default:
-        return d.toLocaleDateString();
-    }
-  } catch {
-    return "n/a";
-  }
-}
-
 /**
  * 📦 Stat Card Component
  */
@@ -189,5 +155,3 @@ function DashboardStat({ title, value, subtitle, color = "text-foreground" }) {
     </Card>
   );
 }
-
-export default OwnerDashboard;

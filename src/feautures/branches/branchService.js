@@ -1,19 +1,23 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export async function getLocations() {
-  const { data, error } = await supabase
-    .from("locations")
-    .select("id, name, type, is_active")
-    .eq("is_active", true); // Only show operational branches
-
+  const { data, error } = await supabase.from("locations").select("*");
   if (error) throw error;
   return data;
 }
+export async function getBranchDashboardSummary() {
+  const { data, error } = await supabase
+    .from("branch_dashboard_summary")
+    .select("*");
+  if (error) throw error;
+  return data;
+}
+
 export async function getBranchDetails(id) {
   const { data: summary, error: summaryError } = await supabase
-    .from("branch_summary")
+    .from("locations")
     .select("*")
-    .eq("location_id", id)
+    .eq("id", id)
     .single();
 
   if (summaryError) throw summaryError;

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { restockProduct } from "@/feautures/products/productService";
 import { getWarehouseLocations } from "@/feautures/branches/branchService";
+import { toast } from "sonner";
 export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState("");
   const [warehouse, setWarehouse] = useState("");
@@ -36,32 +37,32 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
     const qty = Number(quantity);
 
     if (!qty || qty <= 0) {
-      alert("Enter valid quantity");
+      toast.warning("Enter valid quantity");
       return;
     }
 
     if (!warehouse) {
-      alert("Select a warehouse");
+      toast.warning("Select a warehouse");
       return;
     }
 
     setLoading(true);
-
+    console.log(product);
     try {
-      await restockProduct(product.product_id, warehouse, qty);
+      await restockProduct(product.id, warehouse, qty);
 
       const updated = {
         ...product,
-        stock_quantity: (product.stock_quantity || 0) + qty,
+        stock_quantity: (product.inventory[0]?.quantity || 0) + qty,
       };
-
+      toast.success("Product restocked successfully");
       onSuccess(updated);
       setQuantity("");
       setWarehouse("");
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Restock failed");
+      toast.error("Restock failed");
     }
 
     setLoading(false);
@@ -77,12 +78,12 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
         <div className="space-y-4">
           <div>
             <Label>Product</Label>
-            <Input value={product.product_name} disabled />
+            <Input value={product.name} disabled />
           </div>
 
           <div>
             <Label>Current Stock</Label>
-            <Input value={product.stock_quantity || 0} disabled />
+            <Input value={product.inventory[0]?.quantity || 0} disabled />
           </div>
 
           {/* Warehouse Selection */}

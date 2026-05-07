@@ -10,10 +10,24 @@ import {
 } from "@/components/ui/table";
 import { getStaffs } from "@/feautures/staff/staffService";
 import AddStaffModal from "../dashboard/AddStaffModal";
+import { Button } from "@/components/ui/button";
 export default function OwnerStaffPage() {
   const [staff, setStaff] = useState([]);
   const [search, setSearch] = useState("");
-
+  // {
+  //     "staff_id": "00d80538-c762-41b5-8c84-c022fb81f920",
+  //     "full_name": "John Doe",
+  //     "email": null,
+  //     "user_role": "manager",
+  //     "hired_at": "2026-03-05T16:33:49.280153+00:00",
+  //     "salary": 123455,
+  //     "is_active": true,
+  //     "location_id": "d3807ff7-63e5-4def-8863-9cb22978c82e",
+  //     "location_name": "okejigbo",
+  //     "location_address": "okejigbo abeokuta ogunstate",
+  //     "location_type": "branch",
+  //     "employment_status": "Active"
+  // }
   async function fetchStaff() {
     const data = await getStaffs();
     setStaff(data);
@@ -28,17 +42,18 @@ export default function OwnerStaffPage() {
       </div>
     );
   }
+  console.log(staff);
   const totalStaff = staff.length;
   const totalManagers = staff.filter(
     (s) => s.user_role.toLowerCase() === "manager",
   ).length;
-  const totalBranches = [...new Set(staff.map((s) => s.branch_name))].length;
+  const totalBranches = [...new Set(staff.map((s) => s.location_name))].length;
 
   const query = search.toLowerCase();
   const filteredStaff = staff.filter(
     (s) =>
       s.full_name?.toLowerCase().includes(query) ||
-      s.branch_name?.toLowerCase().includes(query) ||
+      s.location_name?.toLowerCase().includes(query) ||
       s.email?.toLowerCase().includes(query) ||
       s.user_role?.toLowerCase().includes(query),
   );
@@ -96,7 +111,8 @@ export default function OwnerStaffPage() {
                 <TableCell>Role</TableCell>
                 <TableCell>Branch</TableCell>
                 <TableCell>Email</TableCell>
-                <TableCell>Total Sales</TableCell>
+                <TableCell>Is Active</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -105,9 +121,14 @@ export default function OwnerStaffPage() {
                   <TableCell>{st.staff_id.slice(0, 8)}</TableCell>
                   <TableCell>{st.full_name}</TableCell>
                   <TableCell>{st.user_role}</TableCell>
-                  <TableCell>{st.branch_name}</TableCell>
+                  <TableCell>{st.location_name}</TableCell>
                   <TableCell>{st.email}</TableCell>
-                  <TableCell>₦{st.total_sales.toLocaleString()}</TableCell>
+                  <TableCell>{st.is_active ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

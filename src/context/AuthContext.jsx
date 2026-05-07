@@ -4,6 +4,7 @@ import { getUserProfile } from "@/feautures/users/profileService";
 import { logoutUser } from "@/feautures/auth/authService";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const AuthContext = createContext();
 
@@ -56,7 +57,7 @@ export function AuthProvider({ children }) {
         setRole(profile.user_role);
         setProfile(profile);
       } catch (error) {
-        console.log(error);
+        toast.error(error);
       }
       setLoading(false);
     }

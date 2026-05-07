@@ -16,10 +16,9 @@ import {
   createProduct,
   createTag,
   getCategories,
-  getLocations,
   getTags,
 } from "@/feautures/products/productService";
-
+import { getLocations } from "@/feautures/branches/branchService";
 /* ============================= */
 /* Add Product Form Component    */
 /* ============================= */

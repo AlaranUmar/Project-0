@@ -1,50 +1,124 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import { Button } from "@/components/ui/button";
-import {
-  DateRangeSelector,
-  LocationSelector,
-} from "@/feautures/dashboard/Selectors";
-import { useMemo, useState } from "react";
+import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
-import { getDateRange } from "@/feautures/branches/getDate";
-import { useReports } from "@/context/ReportContext";
+import { getBranchDashboardSummary } from "@/feautures/branches/branchService";
+import { toast } from "sonner";
 function BranchesPage() {
-  const [dateRange, setDateRange] = useState("today");
-  const [startDate, endDate] = getDateRange(dateRange);
-
   const [query, setQuery] = useState("");
-  const [branch, setBranch] = useState("all");
-  const { branches, totalInventoryValue, loading, branchSalesData } =
-    useReports(startDate, endDate, "owner", branch);
+  const [loading, setLoading] = useState(false);
+  const [branches, setBranches] = useState([]);
+  useEffect(() => {
+    async function fetchBranches() {
+      try {
+        setLoading(true);
+        const data = await getBranchDashboardSummary();
+        setBranches(data);
+        toast.success("Branches loaded successfully");
+      } catch (err) {
+        toast.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBranches();
+  }, []);
 
   const filteredBranches = useMemo(() => {
+    console.log(branches);
     if (!query) return branches;
 
     const q = query.toLowerCase();
 
     return branches.filter(
       (p) =>
-        p.branch_name?.toLowerCase().includes(q) ||
-        p.branch_address?.toLowerCase().includes(q) ||
-        p.branch_type?.toLowerCase().includes(q),
+        p.name?.toLowerCase().includes(q) ||
+        p.address?.toLowerCase().includes(q) ||
+        p.type?.toLowerCase().includes(q),
     );
   }, [query, branches]);
   const totalBranches = branches.length;
-
-  const branchesLowStock = branches.filter((b) => b.low_stock_items > 0).length;
-
-  const branchesOutOfStock = branches.filter(
-    (b) => b.out_of_stock_items > 0,
-  ).length;
+  // [
+  //   {
+  //     id: "d3807ff7-63e5-4def-8863-9cb22978c82e",
+  //     name: "okejigbo",
+  //     address: "okejigbo abeokuta ogunstate",
+  //     type: "branch",
+  //     is_active: true,
+  //     total_revenue: 0,
+  //     total_expenses: 0,
+  //     profit: 0,
+  //     inventory_value: 45000,
+  //     low_stock_count: 0,
+  //     total_staff: 2,
+  //     manager_name: "John Doe",
+  //   },
+  //   {
+  //     id: "2c88ca07-89f8-44f9-8219-b0e446d9a861",
+  //     name: "kuto",
+  //     address: "lipede kuto abeokuta",
+  //     type: "branch",
+  //     is_active: true,
+  //     total_revenue: 15000,
+  //     total_expenses: 0,
+  //     profit: 15000,
+  //     inventory_value: 92000,
+  //     low_stock_count: 1,
+  //     total_staff: 2,
+  //     manager_name: "Bumble Bee",
+  //   },
+  //   {
+  //     id: "d93b2719-6c9a-45e0-82cf-786a60a1e631",
+  //     name: "surulere",
+  //     address: "surulere estate abeokuta",
+  //     type: "warehouse",
+  //     is_active: true,
+  //     total_revenue: 0,
+  //     total_expenses: 0,
+  //     profit: 0,
+  //     inventory_value: 35000,
+  //     low_stock_count: 2,
+  //     total_staff: 2,
+  //     manager_name: "Bruce Wayne",
+  //   },
+  //   {
+  //     id: "6e126f73-dcd0-4f77-bdfa-6fdb5e41bc88",
+  //     name: "okelewo",
+  //     address: "lalubu street okelewo abeokuta",
+  //     type: "branch",
+  //     is_active: true,
+  //     total_revenue: 12500,
+  //     total_expenses: 0,
+  //     profit: 12500,
+  //     inventory_value: 56500,
+  //     low_stock_count: 1,
+  //     total_staff: 2,
+  //     manager_name: "Optimus Prime",
+  //   },
+  // ];
+  const branchSalesData = branches
+    .filter((b) => b.type !== "warehouse")
+    .map((b) => ({
+      name: b.name,
+      sales: Number(b.total_revenue || 0),
+    }));
+  const totalInventoryValue = branches.reduce(
+    (sum, b) => sum + Number(b.inventory_value || 0),
+    0,
+  );
+  const branchesLowStock = branches.filter((b) => b.low_stock_count > 0).length;
+  const total_staff = branches.reduce(
+    (sum, b) => sum + Number(b.total_staff || 0),
+    0,
+  );
   if (loading) return <div>Loading...</div>;
   return (
     <div className="md:p-3">
       <div className="flex flex-col gap-3">
-        <DateRangeSelector onChange={setDateRange} value={dateRange} />
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -64,7 +138,7 @@ function BranchesPage() {
 
             <CardContent>
               <div className="text-sm md:text-lg font-semibold">
-                ₦ {totalInventoryValue.toLocaleString()}
+                ₦{totalInventoryValue.toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -79,11 +153,11 @@ function BranchesPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Branches Out Of Stock</CardTitle>
+              <CardTitle className="text-sm">Total Staff</CardTitle>
             </CardHeader>
 
             <CardContent>
-              <div className="text-lg font-semibold">{branchesOutOfStock}</div>
+              <div className="text-lg font-semibold">{total_staff}</div>
             </CardContent>
           </Card>
         </div>
@@ -114,20 +188,19 @@ function BranchesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className={"h-60"}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-2">
-                  {filteredBranches.map((branch) => (
-                    <BranchCard
-                      key={branch.branch_id}
-                      id={branch.branch_id}
-                      name={branch.branch_name}
-                      type={branch.branch_type}
-                      address={branch.branch_address}
-                      total_staff={branch.total_staff}
-                    />
-                  ))}
-                </div>
-              </ScrollArea>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-2">
+                {filteredBranches.map((branch) => (
+                  <BranchCard
+                    key={branch.id}
+                    id={branch.id}
+                    name={branch.name}
+                    type={branch.type}
+                    address={branch.address}
+                    total_staff={branch.total_staff}
+                    manager={branch.manager_name}
+                  />
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -136,7 +209,7 @@ function BranchesPage() {
   );
 }
 
-function BranchCard({ name, type, id, address, total_staff }) {
+function BranchCard({ name, type, id, address, total_staff, manager }) {
   const navigate = useNavigate();
   return (
     <Card className={" shadow-accent shadow-md"}>
@@ -165,6 +238,12 @@ function BranchCard({ name, type, id, address, total_staff }) {
           <span className="text-sm text-gray-700">Address:</span>
           <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
             {address}
+          </span>
+        </p>
+        <p className="flex justify-between">
+          <span className="text-sm text-gray-700">Manager:</span>
+          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+            {manager}
           </span>
         </p>
         <p className="flex justify-between">

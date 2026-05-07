@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export async function getStaffs() {
-  const { data, error } = await supabase.from("owner_staff_view").select("*");
+  const { data, error } = await supabase.from("staff_summary_view").select("*");
   if (error) throw error;
   return data;
 }
@@ -16,7 +16,7 @@ export async function getStaff(userId) {
 }
 export async function getStaffDetails(staffId = null) {
   let query = supabase
-    .from("staff_view")
+    .from("staff_summary_view")
     .select(
       "id, full_name, email, role, salary, branch_name, is_active, hired_at",
     );

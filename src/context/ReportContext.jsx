@@ -32,14 +32,14 @@ export function useReports(
         // 🔹 Parallel requests (faster)
         const [dashboardRes, timelineRes] = await Promise.all([
           supabase.rpc("get_owner_dashboard", {
-            start_date: startDate,
-            end_date: endDate,
-            selected_branch: selectedBranch,
+            p_start_date: startDate,
+            p_end_date: endDate,
+            p_selected_branch: selectedBranch,
           }),
           supabase.rpc("get_sales_timeline", {
-            start_date: startDate,
-            end_date: endDate,
-            bucket,
+            p_start_date: startDate,
+            p_end_date: endDate,
+            p_bucket: bucket,
           }),
         ]);
 
