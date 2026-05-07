@@ -63,7 +63,7 @@ function BranchSalesChart({ data = [] }) {
             tickFormatter={(value) => formatCompactNaira(value)}
           />
 
-          <Tooltip cursor={{ fill: "#f8fafc" }} content={<CustomTooltip />} />
+          <Tooltip cursor={{ fill: "#7c94b2" }} content={<CustomTooltip />} />
 
           <Legend
             verticalAlign="top"

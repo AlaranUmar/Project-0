@@ -11,8 +11,7 @@ import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import RevenueExpenseChart from "@/feautures/dashboard/RevenueExpenseChart";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 
-import { formatCompactNaira } from "@/utils/formatting";
-
+import Stats from "@/components/ui/stats";
 export default function OwnerDashboard() {
   const [dateRange, setDateRange] = useState("month");
 
@@ -77,18 +76,18 @@ export default function OwnerDashboard() {
 
       {/* STAT CARDS */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <DashboardStat
+        <Stats
           title="Total Revenue"
           value={totals.sales}
           subtitle={dateRange}
         />
-        <DashboardStat title="Inventory Value" value={totals.inventory} />
-        <DashboardStat
+        <Stats title="Inventory Value" value={totals.inventory} />
+        <Stats
           title="Total Profit"
           value={totals.profit}
           color="text-green-600"
         />
-        <DashboardStat
+        <Stats
           title="Total Expense"
           value={totals.expenses}
           color="text-destructive"
@@ -134,24 +133,3 @@ export default function OwnerDashboard() {
 /**
  * 📦 Stat Card Component
  */
-function DashboardStat({ title, value, subtitle, color = "text-foreground" }) {
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className={`text-xl md:text-2xl font-bold ${color}`}>
-          {formatCompactNaira(value ?? 0)}
-        </div>
-        {subtitle && (
-          <p className="text-[10px] text-muted-foreground capitalize mt-1">
-            Period: {subtitle}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}

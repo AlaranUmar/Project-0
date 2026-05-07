@@ -29,6 +29,7 @@ import {
 } from "../dashboard/ProductDialog";
 import RestockDialog from "../dashboard/RestockDialog";
 import { toast } from "sonner";
+import Stats from "@/components/ui/stats";
 
 /* =========================== MAIN PAGE =========================== */
 export default function OwnerProductsPage() {
@@ -112,21 +113,18 @@ export default function OwnerProductsPage() {
     <div className="p-4 space-y-6">
       {/* ================= STATS SECTION ================= */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Total Unique Products" value={stats.totalCount} />
-        <StatCard
+        <Stats title="Total Unique Products" value={stats.totalCount} />
+        <Stats
           title="Out Of Stock"
           value={stats.outOfStockCount}
           color="text-destructive"
         />
-        <StatCard
+        <Stats
           title="Low Stock"
           value={stats.lowStockCount}
           color="text-orange-500"
         />
-        <StatCard
-          title="Total Inventory Value"
-          value={formatCompactNaira(stats.inventoryValue)}
-        />
+        <Stats title="Total Inventory Value" value={stats.inventoryValue} />
       </div>
 
       {/* ================= MAIN INVENTORY TABLE ================= */}
@@ -244,21 +242,6 @@ export default function OwnerProductsPage() {
 }
 
 /* =========================== SUB-COMPONENTS =========================== */
-
-function StatCard({ title, value, color = "text-foreground" }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ProductRow({ product, onEdit, onRestock }) {
   const totalStock =

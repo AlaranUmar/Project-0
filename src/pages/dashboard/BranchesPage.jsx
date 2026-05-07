@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { getBranchDashboardSummary } from "@/feautures/branches/branchService";
 import { toast } from "sonner";
+import Stats from "@/components/ui/stats";
 function BranchesPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,64 +43,6 @@ function BranchesPage() {
     );
   }, [query, branches]);
   const totalBranches = branches.length;
-  // [
-  //   {
-  //     id: "d3807ff7-63e5-4def-8863-9cb22978c82e",
-  //     name: "okejigbo",
-  //     address: "okejigbo abeokuta ogunstate",
-  //     type: "branch",
-  //     is_active: true,
-  //     total_revenue: 0,
-  //     total_expenses: 0,
-  //     profit: 0,
-  //     inventory_value: 45000,
-  //     low_stock_count: 0,
-  //     total_staff: 2,
-  //     manager_name: "John Doe",
-  //   },
-  //   {
-  //     id: "2c88ca07-89f8-44f9-8219-b0e446d9a861",
-  //     name: "kuto",
-  //     address: "lipede kuto abeokuta",
-  //     type: "branch",
-  //     is_active: true,
-  //     total_revenue: 15000,
-  //     total_expenses: 0,
-  //     profit: 15000,
-  //     inventory_value: 92000,
-  //     low_stock_count: 1,
-  //     total_staff: 2,
-  //     manager_name: "Bumble Bee",
-  //   },
-  //   {
-  //     id: "d93b2719-6c9a-45e0-82cf-786a60a1e631",
-  //     name: "surulere",
-  //     address: "surulere estate abeokuta",
-  //     type: "warehouse",
-  //     is_active: true,
-  //     total_revenue: 0,
-  //     total_expenses: 0,
-  //     profit: 0,
-  //     inventory_value: 35000,
-  //     low_stock_count: 2,
-  //     total_staff: 2,
-  //     manager_name: "Bruce Wayne",
-  //   },
-  //   {
-  //     id: "6e126f73-dcd0-4f77-bdfa-6fdb5e41bc88",
-  //     name: "okelewo",
-  //     address: "lalubu street okelewo abeokuta",
-  //     type: "branch",
-  //     is_active: true,
-  //     total_revenue: 12500,
-  //     total_expenses: 0,
-  //     profit: 12500,
-  //     inventory_value: 56500,
-  //     low_stock_count: 1,
-  //     total_staff: 2,
-  //     manager_name: "Optimus Prime",
-  //   },
-  // ];
   const branchSalesData = branches
     .filter((b) => b.type !== "warehouse")
     .map((b) => ({
@@ -120,46 +63,14 @@ function BranchesPage() {
     <div className="md:p-3">
       <div className="flex flex-col gap-3">
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Branches</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <div className="text-sm md:text-lg font-semibold">
-                {totalBranches}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Inventory Value</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <div className="text-sm md:text-lg font-semibold">
-                ₦{totalInventoryValue.toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Branches With Low Stock</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <div className="text-lg font-semibold">{branchesLowStock}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Total Staff</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <div className="text-lg font-semibold">{total_staff}</div>
-            </CardContent>
-          </Card>
+          <Stats title="Total Branches" value={totalBranches} />
+          <Stats
+            title="Branches With Low Stock"
+            value={branchesLowStock}
+            color="text-orange-500"
+          />
+          <Stats title="Total Staff" value={total_staff} />
+          <Stats title="Total Inventory Value" value={totalInventoryValue} />
         </div>
         <div className="grid grid-cols-1  gap-3">
           <Card className="md:col-span-3 w-full">
