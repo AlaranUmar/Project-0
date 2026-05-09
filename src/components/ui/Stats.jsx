@@ -6,6 +6,8 @@ export default function Stats({
   value,
   subtitle,
   color = "text-foreground",
+  icon: Icon,
+  naira = true,
 }) {
   return (
     <Card className="overflow-hidden">
@@ -13,10 +15,12 @@ export default function Stats({
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase">
           {title}
         </CardTitle>
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
       </CardHeader>
       <CardContent>
         <div className={`text-xl md:text-2xl font-bold ${color}`}>
-          {formatCompactNaira(value ?? 0)}
+          {/* what if we dont need the naira formatting? */}
+          {naira ? (value ?? formatCompactNaira(value ?? 0)) : (value ?? 0)}
         </div>
         {subtitle && (
           <p className="text-[10px] text-muted-foreground capitalize mt-1">

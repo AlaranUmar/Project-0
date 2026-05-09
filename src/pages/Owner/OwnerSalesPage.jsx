@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { getSales } from "@/feautures/sales/Sales";
-import { DollarSign } from "lucide-react";
+import Stats from "@/components/ui/Stats";
+import { Banknote, CreditCard, Plane, Send, Wallet } from "lucide-react";
 export default function OwnerSalesPage() {
-  const [sales, setSales] = useState([]);
+  const [sales, setSales] = useState(null);
   const [search, setSearch] = useState("");
 
   const filteredSales = useMemo(() => {
@@ -30,6 +31,7 @@ export default function OwnerSalesPage() {
     async function fetchSales() {
       const data = await getSales();
       setSales(data);
+      console.log(data);
     }
     fetchSales();
   }, []);
@@ -40,67 +42,39 @@ export default function OwnerSalesPage() {
       </div>
     );
   }
-  const totalTransferRevenue = sales.reduce(
+  const totalTransferRevenue = filteredSales.reduce(
     (sum, sale) => sum + (sale.payment_method === "transfer" ? sale.amount : 0),
     0,
   );
-  const totalCashRevenue = sales.reduce(
+  const totalCashRevenue = filteredSales.reduce(
     (sum, sale) => sum + (sale.payment_method === "cash" ? sale.amount : 0),
     0,
   );
-  const totalPOSRevenue = sales.reduce(
+  const totalPOSRevenue = filteredSales.reduce(
     (sum, sale) => sum + (sale.payment_method === "pos" ? sale.amount : 0),
     0,
   );
-  const totalRevenue = sales.reduce((sum, sale) => sum + sale.amount, 0);
+  const totalSales = filteredSales.length;
 
   return (
     <div className="p-1 md:p-4 space-y-4">
       <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Total Transfer Revenue</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">
-              ₦{totalTransferRevenue.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Total Cash Revenue</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">
-              ₦{totalCashRevenue.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Total POS Revenue</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">
-              ₦{totalPOSRevenue.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Total Revenue</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-xl font-bold">
-              ₦{totalRevenue.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+        <Stats title={"Total Sales"} value={totalSales} icon={Wallet} />
+        <Stats
+          title={"Total Transfer Revenue"}
+          value={totalTransferRevenue}
+          icon={Send}
+        />
+        <Stats
+          title={"Total Cash Revenue"}
+          value={totalCashRevenue}
+          icon={Banknote}
+        />
+        <Stats
+          title={"Total POS Revenue"}
+          value={totalPOSRevenue}
+          icon={CreditCard}
+        />
       </div>
       <Card>
         <CardHeader>

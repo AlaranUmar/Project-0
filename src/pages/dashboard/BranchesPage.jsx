@@ -123,12 +123,14 @@ function BranchesPage() {
 function BranchCard({ name, type, id, address, total_staff, manager }) {
   const navigate = useNavigate();
   return (
-    <Card className={" shadow-accent shadow-md"}>
+    <Card>
       <CardHeader>
         <CardTitle className={"flex justify-between items-center"}>
-          <p className="flex gap-1">
+          <p className="flex flex-col">
             <span className="capitalize">{name}</span>
-            <span className="text-gray-600">{type}</span>
+            <span className="text-muted-foreground text-xs capitalize">
+              {type}
+            </span>
           </p>
           {type === "warehouse" ? (
             <Button

@@ -2,16 +2,8 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function getSales() {
   const { data, error } = await supabase
-    .from("sales")
-    .select(
-      `
-      *,
-      items:sale_items(
-        *,
-        product:products(name, image_url)
-      )
-    `,
-    )
+    .from("sales_summary_view")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {

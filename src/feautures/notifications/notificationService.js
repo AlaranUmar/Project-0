@@ -1,76 +1,32 @@
 import { supabase } from "@/lib/supabaseClient";
 
-// getNotifications();
-// createNotification();
-// markNotificationRead();
-// markAllNotificationsRead();
-// deleteNotification();
-
-export async function getTransfers() {
+export async function getNotifications() {
   const { data, error } = await supabase
-    .from("transfers_overview")
-    .select("*")
+    .from("notifications")
+    .select(
+      `
+      *,
+      alerts (
+        alert_type,
+        product_id,
+        location_id
+      )
+    `,
+    )
     .order("created_at", { ascending: false });
-  if (error) console.error(error);
+
+  if (error) throw error;
+
   return data;
 }
 
-export async function approveTransfer(transferId, items = [], sourceBranchId) {
-  const formattedItems = items.map((i) => ({
-    product_id: i.product_id,
-    approved: i.approved,
-    quantity: i.quantity,
-  }));
+export async function getAlerts() {
+  const { data, error } = await supabase
+    .from("alerts")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  const { error } = await supabase.rpc("approve_transfer", {
-    p_transfer_id: transferId,
-    p_approved_items: formattedItems,
-    p_source_location: sourceBranchId,
-  });
+  if (error) throw error;
 
-  if (error) {
-    console.error("Approve transfer error:", error);
-    throw error;
-  }
-}
-
-export async function rejectTransfer(transferId) {
-  const { error } = await supabase.rpc("reject_transfer", {
-    p_transfer_id: transferId,
-  });
-
-  if (error) {
-    console.error("Reject transfer error:", error);
-    throw error;
-  }
-}
-
-export async function handle_dispatch(transferId) {
-  const { error } = await supabase.rpc("dispatch_transfer", {
-    p_transfer_id: transferId,
-  });
-  if (error) {
-    console.error("dispatch transfer error:", error);
-    throw error; // Throw so the UI can handle the error
-  }
-}
-
-export async function handle_receive(transferId) {
-  const { error } = await supabase.rpc("receive_transfer", {
-    p_transfer_id: transferId,
-  });
-  if (error) {
-    console.error("Receive transfer error:", error);
-    throw error; // Throw so the UI can handle the error
-  }
-}
-export async function handle_request(branchId, items) {
-  const { error } = await supabase.rpc("request_transfer", {
-    p_to_location_id: branchId,
-    p_items: items,
-  });
-  if (error) {
-    console.error("Request transfer error:", error);
-    throw error; // Throw so the UI can handle the error
-  }
+  return data;
 }
