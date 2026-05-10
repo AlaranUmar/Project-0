@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import { Button } from "@/components/ui/button";
-import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,6 @@ function BranchesPage() {
         setLoading(true);
         const data = await getBranchDashboardSummary();
         setBranches(data);
-        toast.success("Branches loaded successfully");
       } catch (err) {
         toast.error(err);
       } finally {
@@ -132,9 +130,7 @@ function BranchCard({ name, type, id, address, total_staff, manager }) {
         <CardTitle className={"flex justify-between items-center"}>
           <p className="flex flex-col">
             <span className="capitalize">{name}</span>
-            <span className="text-muted-foreground text-xs capitalize">
-              {type}
-            </span>
+            <span className=" text-xs capitalize">{type}</span>
           </p>
           {type === "warehouse" ? (
             <Button
@@ -152,20 +148,20 @@ function BranchCard({ name, type, id, address, total_staff, manager }) {
       </CardHeader>
       <CardContent className={"space-y-2"}>
         <p className="flex justify-between">
-          <span className="text-sm text-gray-700">Address:</span>
-          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+          <span className="text-sm">Address:</span>
+          <span className=" text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
             {address}
           </span>
         </p>
         <p className="flex justify-between">
-          <span className="text-sm text-gray-700">Manager:</span>
-          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+          <span className="text-sm">Manager:</span>
+          <span className=" text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
             {manager}
           </span>
         </p>
         <p className="flex justify-between">
-          <span className="text-sm text-gray-700">Staff No:</span>
-          <span className="text-gray-800 text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
+          <span className="text-sm">Staff No:</span>
+          <span className=" text-nowrap font-semibold md:max-w-40 overflow-hidden text-ellipsis ">
             {total_staff}
           </span>
         </p>

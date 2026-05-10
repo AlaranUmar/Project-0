@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 import { getRecentAlerts } from "@/feautures/alerts/alertsService";
+import { Link } from "react-router-dom";
 
 function Alerts() {
   const [alerts, setAlerts] = useState([]);
@@ -171,19 +172,22 @@ function Alerts() {
                               {alert.product_name}
                             </p>
                           </div>
-
-                          <Button
-                            size="sm"
-                            variant={
-                              alert.status === "active"
-                                ? "default"
-                                : "secondary"
-                            }
-                            disabled={alert.status !== "active"}
-                            onClick={() => handleResolve(alert.id)}
-                          >
-                            {alert.status === "active" ? "Resolve" : "Resolved"}
-                          </Button>
+                          <Link to={"products"}>
+                            <Button
+                              size="sm"
+                              variant={
+                                alert.status === "active"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              disabled={alert.status !== "active"}
+                              onClick={() => handleResolve(alert.id)}
+                            >
+                              {alert.status === "active"
+                                ? "Resolve"
+                                : "Resolved"}
+                            </Button>
+                          </Link>
                         </div>
 
                         {/* META */}

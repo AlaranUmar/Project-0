@@ -50,7 +50,6 @@ export default function OwnerTransfersPage() {
       const [tData, pData] = await Promise.all([getTransfers(), getProducts()]);
       setTransfers(tData || []);
       setProducts(pData || []);
-      toast.success("successfully loaded transfers");
     } catch (err) {
       console.error(err);
       toast.error("Failed to load transfers");
@@ -95,7 +94,6 @@ export default function OwnerTransfersPage() {
 
   // ✅ ACTION HANDLER
   const performAction = async (fn, transfer, label) => {
-    toast.success("Failed to aa");
     if (["completed", "rejected"].includes(transfer.status)) {
       toast.error("This transfer is locked");
       return;
@@ -141,7 +139,7 @@ export default function OwnerTransfersPage() {
   }
 
   return (
-    <div className="p-4 space-y-5 bg-slate-50/50 min-h-screen">
+    <div className="p-4 space-y-5 min-h-screen">
       {/* ✅ STATS */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total" value={stats.total} />
@@ -158,13 +156,11 @@ export default function OwnerTransfersPage() {
         <StatCard label="Value" value={stats.value} />
       </div>
 
-      <Card className="border-none shadow-sm">
+      <Card className="border-none">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <CardTitle>Owner Transfer Control</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Full control over all inventory movement
-            </p>
+            <p className="text-sm">Full control over all inventory movement</p>
 
             <Button
               className="mt-2"
@@ -178,7 +174,7 @@ export default function OwnerTransfersPage() {
           </div>
 
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 " />
             <Input
               placeholder="Search transfers..."
               value={search}
@@ -189,7 +185,7 @@ export default function OwnerTransfersPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="rounded-xl border overflow-hidden bg-white">
+          <div className="rounded-xl border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -217,7 +213,7 @@ export default function OwnerTransfersPage() {
 
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">
+                          <span className="">
                             {t.from_location?.name || "Warehouse"}
                           </span>
                           <ArrowRight className="w-3 h-3" />
@@ -341,7 +337,7 @@ export default function OwnerTransfersPage() {
 function StatCard({ label, value, color = "" }) {
   return (
     <Card className="p-4">
-      <p className="text-xs text-muted-foreground uppercase">{label}</p>
+      <p className="text-xs  uppercase">{label}</p>
       <p className={`text-xl font-bold ${color}`}>{value}</p>
     </Card>
   );

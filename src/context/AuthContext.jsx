@@ -1,9 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserProfile } from "@/feautures/users/profileService";
 import { logoutUser } from "@/feautures/auth/authService";
-
-import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const AuthContext = createContext();
@@ -16,23 +15,33 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize session on mount
     async function initAuth() {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        const currentSession = data.session;
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        setLoading(false);
+      }
     }
+
     initAuth();
+
+    // Listen for auth changes (login, logout, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
         if (!session) {
           setRole(null);
+          setProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
       },
     );
 
@@ -41,36 +50,50 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function getRole() {
-      if (!user) {
-        return;
-      }
+      if (!user) return;
+
       try {
         setLoading(true);
-        const profile = await getUserProfile(user.id);
+        const userProfile = await getUserProfile(user.id);
 
-        if (profile.user_role === "customer") {
+        // Security Guard: Prevent customers from accessing admin/dashboard areas
+        if (userProfile?.user_role === "customer") {
           await logoutUser();
-          alert("Customers cannot access this dashboard");
           setRole(null);
+          setProfile(null);
+          toast.error("Access Denied: Customers cannot access this dashboard.");
           return;
         }
-        setRole(profile.user_role);
-        setProfile(profile);
+
+        setRole(userProfile?.user_role);
+        setProfile(userProfile);
       } catch (error) {
-        toast.error(error);
+        toast.error("Failed to load user profile");
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
+
     getRole();
   }, [user]);
 
-  return (
-    <AuthContext.Provider value={{ user, session, role, loading, profile }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    session,
+    role,
+    loading,
+    profile,
+    isAuthenticated: !!user,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
