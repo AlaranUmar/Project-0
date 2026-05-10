@@ -10,11 +10,11 @@ import { getDateRange } from "@/feautures/branches/getDate";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import RevenueExpenseChart from "@/feautures/dashboard/RevenueExpenseChart";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
-
-import Stats from "@/components/ui/stats";
+import { formatCompactNaira } from "@/utils/formatting";
+import { Package, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import Stats from "@/components/ui/Stats";
 export default function OwnerDashboard() {
   const [dateRange, setDateRange] = useState("month");
-
   // ✅ Prevent unnecessary recalculation
   const [startDate, endDate] = useMemo(
     () => getDateRange(dateRange),
@@ -78,19 +78,28 @@ export default function OwnerDashboard() {
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Stats
           title="Total Revenue"
-          value={totals.sales}
+          value={formatCompactNaira(totals.sales)}
           subtitle={dateRange}
+          icon={Wallet}
+          // color="primary"
         />
-        <Stats title="Inventory Value" value={totals.inventory} />
+        <Stats
+          title="Inventory Value"
+          value={formatCompactNaira(totals.inventory)}
+          icon={Package}
+          // color="orange-500"
+        />
         <Stats
           title="Total Profit"
-          value={totals.profit}
-          color="text-green-600"
+          value={formatCompactNaira(totals.profit)}
+          icon={TrendingUp}
+          // color="green-600"
         />
         <Stats
           title="Total Expense"
-          value={totals.expenses}
-          color="text-destructive"
+          value={formatCompactNaira(totals.expenses)}
+          icon={TrendingDown}
+          // color="red-600"
         />
       </div>
 

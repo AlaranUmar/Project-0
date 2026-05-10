@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { getBranchDashboardSummary } from "@/feautures/branches/branchService";
 import { toast } from "sonner";
 import Stats from "@/components/ui/stats";
+import { formatCompactNaira } from "@/utils/formatting";
 function BranchesPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,7 +71,10 @@ function BranchesPage() {
             color="text-orange-500"
           />
           <Stats title="Total Staff" value={total_staff} />
-          <Stats title="Total Inventory Value" value={totalInventoryValue} />
+          <Stats
+            title="Total Inventory Value"
+            value={formatCompactNaira(totalInventoryValue)}
+          />
         </div>
         <div className="grid grid-cols-1  gap-3">
           <Card className="md:col-span-3 w-full">

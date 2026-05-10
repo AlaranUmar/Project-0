@@ -11,22 +11,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { getSales } from "@/feautures/sales/Sales";
-import Stats from "@/components/ui/Stats";
 import { Banknote, CreditCard, Plane, Send, Wallet } from "lucide-react";
+import Stats from "@/components/ui/Stats";
 export default function OwnerSalesPage() {
   const [sales, setSales] = useState(null);
   const [search, setSearch] = useState("");
-
-  const filteredSales = useMemo(() => {
-    const term = search.toLowerCase();
-    return sales.filter(
-      (sale) =>
-        sale.sale_id.toLowerCase().includes(term) ||
-        sale.cashier_name.toLowerCase().includes(term) ||
-        sale.items.some((p) => p.product_name.toLowerCase().includes(term)) ||
-        sale.branch_name.toLowerCase().includes(term),
-    );
-  }, [sales, search]);
   useEffect(() => {
     async function fetchSales() {
       const data = await getSales();
@@ -42,6 +31,17 @@ export default function OwnerSalesPage() {
       </div>
     );
   }
+  const filteredSales = useMemo(() => {
+    const term = search.toLowerCase();
+    return sales.filter(
+      (sale) =>
+        sale.sale_id.toLowerCase().includes(term) ||
+        sale.cashier_name.toLowerCase().includes(term) ||
+        sale.items.some((p) => p.product_name.toLowerCase().includes(term)) ||
+        sale.branch_name.toLowerCase().includes(term),
+    );
+  }, [sales, search]);
+  console.log(sales);
   const totalTransferRevenue = filteredSales.reduce(
     (sum, sale) => sum + (sale.payment_method === "transfer" ? sale.amount : 0),
     0,
@@ -55,23 +55,22 @@ export default function OwnerSalesPage() {
     0,
   );
   const totalSales = filteredSales.length;
-
   return (
     <div className="p-1 md:p-4 space-y-4">
       <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
         <Stats title={"Total Sales"} value={totalSales} icon={Wallet} />
         <Stats
-          title={"Total Transfer Revenue"}
+          title={"Transfer Revenue"}
           value={totalTransferRevenue}
           icon={Send}
         />
         <Stats
-          title={"Total Cash Revenue"}
+          title={"Cash Revenue"}
           value={totalCashRevenue}
           icon={Banknote}
         />
         <Stats
-          title={"Total POS Revenue"}
+          title={"POS Revenue"}
           value={totalPOSRevenue}
           icon={CreditCard}
         />

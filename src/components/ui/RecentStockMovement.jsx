@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowUpRight, ArrowDownLeft, RefreshCcw, User } from "lucide-react";
 import { getRecentStockMovements } from "@/feautures/inventory/inventoryService";
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 
 const getIcon = (type) => {
   switch (type) {
@@ -29,14 +30,14 @@ export default function RecentStockMovement() {
     getMovements();
   }, []);
   return (
-    <Card className="md:col-span-3 h-full">
+    <Card className="md:col-span-3 max-h-130">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-bold">Stock Movements</CardTitle>
         <Badge variant="outline">{movements.length} updates</Badge>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea>
-          <div className="flex flex-col max-h-80">
+        <ScrollArea className="h-[420px]">
+          <div className="flex flex-col">
             {movements.length > 0 ? (
               movements.map((m, index) => (
                 <div key={m.id}>
@@ -72,9 +73,8 @@ export default function RecentStockMovement() {
                               : m.quantity_change}
                           </p>
                           <p className="text-[10px] text-muted-foreground">
-                            {new Date(m.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
+                            {formatDistanceToNow(new Date(m.created_at), {
+                              addSuffix: true,
                             })}
                           </p>
                         </div>

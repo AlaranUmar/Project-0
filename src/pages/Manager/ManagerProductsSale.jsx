@@ -79,6 +79,7 @@ function ManagerProductsSale({ profile }) {
   return (
     <div className="p-4 flex flex-col gap-4">
       {/* STATS */}
+      {console.log(products)}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Stat title="Total Products" value={totalProducts} />
         <Stat title="Low Stock" value={lowStock} />

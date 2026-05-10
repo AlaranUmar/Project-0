@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, ImageIcon, Loader2 } from "lucide-react";
+import { Box, Edit, ImageIcon, Loader2 } from "lucide-react";
 
 // Services & Utils
 import {
@@ -124,7 +124,11 @@ export default function OwnerProductsPage() {
           value={stats.lowStockCount}
           color="text-orange-500"
         />
-        <Stats title="Total Inventory Value" value={stats.inventoryValue} />
+        <Stats
+          title="Inventory Value"
+          value={formatCompactNaira(stats.inventoryValue)}
+          icon={Box}
+        />
       </div>
 
       {/* ================= MAIN INVENTORY TABLE ================= */}
@@ -171,7 +175,7 @@ export default function OwnerProductsPage() {
                   <TableHead>Product Name</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Tags</TableHead>
+                  {/* <TableHead>Tags</TableHead> */}
                   <TableHead className="text-center">Total Stock</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -274,7 +278,7 @@ function ProductRow({ product, onEdit, onRestock }) {
           {product.categories?.name || "Uncategorized"}
         </Badge>
       </TableCell>
-      <TableCell>
+      {/* <TableCell>
         <div className="flex flex-wrap gap-1 max-w-[200px]">
           {product.products_tags?.map((pt) => (
             <span
@@ -285,7 +289,7 @@ function ProductRow({ product, onEdit, onRestock }) {
             </span>
           ))}
         </div>
-      </TableCell>
+      </TableCell> */}
       <TableCell className="text-center">
         <div className="flex flex-col items-center">
           <span
