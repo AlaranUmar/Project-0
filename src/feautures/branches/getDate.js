@@ -10,8 +10,10 @@ export function getDateRange(range) {
 
     case "week": {
       const firstDayOfWeek = new Date(today);
-      firstDayOfWeek.setDate(today.getDate() - today.getDay() + 1);
-
+      // Adjusts to Monday of the current week
+      firstDayOfWeek.setDate(
+        today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1),
+      );
       start = new Date(firstDayOfWeek.setHours(0, 0, 0, 0));
       end = new Date(today.setHours(23, 59, 59, 999));
       break;
@@ -31,15 +33,25 @@ export function getDateRange(range) {
       break;
 
     case "total":
-      start = new Date(2000, 0, 1); // very early date
+      start = new Date(2000, 0, 1);
       end = new Date(today.setHours(23, 59, 59, 999));
       break;
 
     default:
-      start = today;
-      end = today;
+      start = new Date(today.setHours(0, 0, 0, 0));
+      end = new Date(today.setHours(23, 59, 59, 999));
   }
 
-  const formatDate = (d) => d.toISOString().split("T")[0];
+  /**
+   * Helper to format date as YYYY-MM-DD using local time
+   * to avoid timezone shifts caused by toISOString()
+   */
+  const formatDate = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   return [formatDate(start), formatDate(end)];
 }

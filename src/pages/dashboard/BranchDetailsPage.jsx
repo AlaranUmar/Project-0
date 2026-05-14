@@ -31,6 +31,7 @@ export default function BranchDetailsPage() {
     async function loadBranchData() {
       const data = await getBranchDetails(id);
       setBranchData(data);
+      console.log(data);
     }
 
     if (id) loadBranchData();
@@ -57,6 +58,7 @@ export default function BranchDetailsPage() {
     netProfit,
     stockVal,
   } = branchData;
+  console.log(branchData, staff, "branchData");
 
   return (
     <div className="space-y-4 p-2 md:py-4 relative">

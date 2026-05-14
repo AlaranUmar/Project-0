@@ -9,45 +9,66 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate()
-  const handleLogin = async () => {
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
       await loginUser(email, password);
-      alert("login successful");
-      navigate("/")
-    } catch (error) {
-      alert(error.message);
+      navigate("/");
+    } catch (err) {
+      setError(err?.message || "Login failed. Try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="md:w-100 w-9/10">
-        <CardHeader>
-          <CardTitle>Login Into Your Account</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+      <Card className="w-full max-w-md shadow-lg border">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-xl font-semibold">Welcome Back</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Sign in to continue to your dashboard
+          </p>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <Input
-            placeholder="Email"
-            type={"email"}
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-          />
+        <form onSubmit={handleLogin}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
 
-          <Input
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-          />
+            <div className="space-y-2">
+              <Input
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
 
-          <Button className="w-full" onClick={handleLogin} disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-        </CardContent>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign in"}
+            </Button>
+          </CardContent>
+        </form>
       </Card>
     </div>
   );

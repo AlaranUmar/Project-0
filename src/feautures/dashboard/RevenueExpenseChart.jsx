@@ -8,7 +8,6 @@ import {
   ResponsiveContainer,
   Legend,
   ReferenceArea,
-  Area,
   ComposedChart,
 } from "recharts";
 import {
@@ -23,9 +22,6 @@ import {
   endOfYear,
   eachMonthOfInterval,
   eachWeekOfInterval,
-  isSameDay,
-  isSameHour,
-  isSameMonth,
 } from "date-fns";
 import { formatCompactNaira } from "@/utils/formatting";
 
@@ -39,7 +35,7 @@ const prepareChartData = (view, rawData) => {
   const now = new Date();
   let skeleton = [];
 
-  // 🔹 Create timeline skeleton
+  // 🔹 1. Create timeline skeleton based on view
   switch (view) {
     case "today":
       skeleton = eachHourOfInterval({
@@ -47,14 +43,12 @@ const prepareChartData = (view, rawData) => {
         end: endOfToday(),
       });
       break;
-
     case "week":
       skeleton = eachDayOfInterval({
         start: startOfWeek(now, { weekStartsOn: 1 }),
         end: endOfWeek(now, { weekStartsOn: 1 }),
       });
       break;
-
     case "month":
       skeleton = eachWeekOfInterval({
         start: new Date(now.getFullYear(), now.getMonth(), 1),
@@ -62,56 +56,48 @@ const prepareChartData = (view, rawData) => {
         weekStartsOn: 1,
       });
       break;
-
     case "year":
       skeleton = eachMonthOfInterval({
         start: startOfYear(now),
         end: endOfYear(now),
       });
       break;
-
-    case "all":
+    case "total": // Aligned with OwnerDashboard
     default:
       return [...rawData].sort((a, b) => new Date(a.name) - new Date(b.name));
   }
 
-  // 🔹 Index raw data (O(n))
+  // 🔹 2. Index raw data (O(n)) for quick lookup
   const indexed = new Map();
-
   rawData.forEach((d) => {
     const date = new Date(d.name);
     let key;
-
-    if (view === "today") key = date.setMinutes(0, 0, 0);
-    else if (view === "week") key = date.setHours(0, 0, 0, 0);
-    else if (view === "month") {
+    if (view === "today") key = new Date(date).setMinutes(0, 0, 0);
+    else if (view === "week") key = new Date(date).setHours(0, 0, 0, 0);
+    else if (view === "month")
       key = startOfWeek(date, { weekStartsOn: 1 }).getTime();
-    } else if (view === "year") {
+    else if (view === "year")
       key = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
-    }
 
     indexed.set(key, d);
   });
 
-  // 🔹 Merge skeleton + data
+  // 🔹 3. Merge skeleton + data
   return skeleton.map((tickDate) => {
     let key;
-
     if (view === "today") key = tickDate.setMinutes(0, 0, 0);
     else if (view === "week") key = tickDate.setHours(0, 0, 0, 0);
-    else if (view === "month") {
+    else if (view === "month")
       key = startOfWeek(tickDate, { weekStartsOn: 1 }).getTime();
-    } else if (view === "year") {
+    else if (view === "year")
       key = new Date(tickDate.getFullYear(), tickDate.getMonth(), 1).getTime();
-    }
 
-    return (
-      indexed.get(key) || {
-        name: key, // timestamp (NO timezone bugs)
-        revenue: 0,
-        expense: 0,
-      }
-    );
+    const existingData = indexed.get(key);
+    return {
+      name: key,
+      revenue: Number(existingData?.revenue || 0),
+      expense: Number(existingData?.expense || 0),
+    };
   });
 };
 
@@ -128,7 +114,7 @@ function RevenueExpenseChart({ data = [], view }) {
       case "week":
         return format(date, "EEE");
       case "month":
-        return `W${Math.ceil(date.getDate() / 7)}`;
+        return `Week ${Math.ceil(date.getDate() / 7)}`;
       case "year":
         return format(date, "MMM");
       default:
@@ -138,13 +124,13 @@ function RevenueExpenseChart({ data = [], view }) {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
-
     return (
-      <div className="bg-white p-4 rounded-lg shadow-lg border border-slate-100 text-xs">
-        <p className="font-bold mb-2 text-slate-500">{formatXAxis(label)}</p>
-
+      <div className="bg-white p-3 rounded-lg shadow-xl border border-slate-100 text-[11px]">
+        <p className="font-bold mb-2 text-slate-500 border-bottom pb-1">
+          {formatXAxis(label)}
+        </p>
         {payload.map((entry, i) => (
-          <div key={i} className="flex justify-between gap-6 mb-1">
+          <div key={i} className="flex justify-between gap-8 mb-1">
             <span style={{ color: entry.color }} className="font-medium">
               {entry.name}:
             </span>
@@ -155,11 +141,10 @@ function RevenueExpenseChart({ data = [], view }) {
     );
   };
 
-  // 🔹 Empty state
   if (!chartData.length) {
     return (
-      <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-        No data available
+      <div className="flex items-center justify-center h-full text-slate-400 text-sm italic">
+        No records found for this timeline
       </div>
     );
   }
@@ -168,53 +153,48 @@ function RevenueExpenseChart({ data = [], view }) {
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={chartData}
-        margin={{ top: 10, right: 10, left: 5, bottom: 0 }}
+        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
       >
-        <defs>
-          <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.1} />
-            <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-
         <CartesianGrid
           strokeDasharray="3 3"
           vertical={false}
-          stroke="#f0f0f0"
+          stroke="#f1f5f9"
         />
-
         <XAxis
           dataKey="name"
           tickFormatter={formatXAxis}
-          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          tick={{ fill: "#64748b", fontSize: 10 }}
           axisLine={false}
           tickLine={false}
-          minTickGap={10}
+          minTickGap={15}
         />
-
         <YAxis
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#94a3b8", fontSize: 11 }}
-          tickFormatter={(value) => formatCompactNaira(value)}
+          tick={{ fill: "#64748b", fontSize: 10 }}
+          tickFormatter={(val) => formatCompactNaira(val)}
         />
-
-        <Tooltip content={<CustomTooltip />} />
-
+        <Tooltip
+          content={<CustomTooltip />}
+          cursor={{ stroke: "#cbd5e1", strokeWidth: 1 }}
+        />
         <Legend
           verticalAlign="top"
           align="right"
           iconType="circle"
-          wrapperStyle={{ paddingBottom: "20px", fontSize: "12px" }}
+          wrapperStyle={{
+            paddingBottom: "15px",
+            fontSize: "11px",
+            fontWeight: 500,
+          }}
         />
 
-        {/* 🔹 Business Hours Highlight */}
         {view === "today" && (
           <ReferenceArea
             x1={new Date().setHours(BUSINESS_START, 0, 0, 0)}
             x2={new Date().setHours(BUSINESS_END, 0, 0, 0)}
             fill="#f8fafc"
-            strokeOpacity={0.3}
+            fillOpacity={0.5}
           />
         )}
 
@@ -223,18 +203,17 @@ function RevenueExpenseChart({ data = [], view }) {
           dataKey="revenue"
           name="Revenue"
           stroke="#16a34a"
-          strokeWidth={3}
-          dot={chartData.length < 32}
-          activeDot={{ r: 6, strokeWidth: 0 }}
+          strokeWidth={2.5}
+          dot={chartData.length < 15}
+          activeDot={{ r: 5, strokeWidth: 0 }}
         />
-
         <Line
           type="monotone"
           dataKey="expense"
           name="Expense"
           stroke="#dc2626"
           strokeWidth={2}
-          strokeDasharray="5 5"
+          strokeDasharray="4 4"
           dot={false}
         />
       </ComposedChart>

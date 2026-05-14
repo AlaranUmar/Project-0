@@ -19,7 +19,7 @@ export async function getBranchDetails(id) {
     .select("*")
     .eq("id", id)
     .single();
-
+  console.log(summary);
   if (summaryError) throw summaryError;
 
   const [rev, exp, stock] = await Promise.all([
