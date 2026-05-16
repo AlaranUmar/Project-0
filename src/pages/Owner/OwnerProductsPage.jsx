@@ -29,7 +29,7 @@ import {
 } from "../dashboard/ProductDialog";
 import RestockDialog from "../dashboard/RestockDialog";
 import { toast } from "sonner";
-import Stats from "@/components/ui/stats";
+import Stats from "@/components/ui/Stats";
 import { useNavigate } from "react-router-dom";
 
 /* =========================== MAIN PAGE =========================== */
