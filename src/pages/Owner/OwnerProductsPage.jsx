@@ -30,6 +30,7 @@ import {
 import RestockDialog from "../dashboard/RestockDialog";
 import { toast } from "sonner";
 import Stats from "@/components/ui/stats";
+import { useNavigate } from "react-router-dom";
 
 /* =========================== MAIN PAGE =========================== */
 export default function OwnerProductsPage() {
@@ -248,14 +249,25 @@ export default function OwnerProductsPage() {
 /* =========================== SUB-COMPONENTS =========================== */
 
 function ProductRow({ product, onEdit, onRestock }) {
+  const navigate = useNavigate();
+
   const totalStock =
     product.inventory?.reduce((sum, inv) => sum + Number(inv.quantity), 0) || 0;
+
   const isLowStock =
     totalStock > 0 && totalStock <= (product.reorder_level || 12);
+
   const isOutOfStock = totalStock <= 0;
 
+  const goToDetails = () => {
+    navigate(`/products/${product.id}`);
+  };
+
   return (
-    <TableRow>
+    <TableRow
+      onClick={goToDetails}
+      className="cursor-pointer hover:bg-muted/50 transition-colors"
+    >
       <TableCell>
         {product.image_url ? (
           <img
@@ -269,39 +281,39 @@ function ProductRow({ product, onEdit, onRestock }) {
           </div>
         )}
       </TableCell>
+
       <TableCell className="font-medium truncate max-w-12.5">
         {product.name}
       </TableCell>
+
       <TableCell>₦{Number(product.price).toLocaleString()}</TableCell>
+
       <TableCell>
         <Badge variant="outline" className="font-normal">
           {product.categories?.name || "Uncategorized"}
         </Badge>
       </TableCell>
-      {/* <TableCell>
-        <div className="flex flex-wrap gap-1 max-w-[200px]">
-          {product.products_tags?.map((pt) => (
-            <span
-              key={pt.tags.id}
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
-            >
-              {pt.tags.name}
-            </span>
-          ))}
-        </div>
-      </TableCell> */}
+
       <TableCell className="text-center">
         <div className="flex flex-col items-center">
           <span
-            className={`font-bold ${isOutOfStock ? "text-destructive" : isLowStock ? "text-orange-500" : "text-green-600"}`}
+            className={`font-bold ${
+              isOutOfStock
+                ? "text-destructive"
+                : isLowStock
+                  ? "text-orange-500"
+                  : "text-green-600"
+            }`}
           >
             {totalStock}
           </span>
+
           {isLowStock && (
             <span className="text-[10px] uppercase font-bold text-orange-500">
               Low Stock
             </span>
           )}
+
           {isOutOfStock && (
             <span className="text-[10px] uppercase font-bold text-destructive">
               Out of Stock
@@ -309,8 +321,12 @@ function ProductRow({ product, onEdit, onRestock }) {
           )}
         </div>
       </TableCell>
+
       <TableCell className="text-right">
-        <div className="flex justify-end gap-2">
+        <div
+          className="flex justify-end gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
             size="sm"
             variant="outline"
@@ -318,6 +334,7 @@ function ProductRow({ product, onEdit, onRestock }) {
           >
             Restock
           </Button>
+
           <Button size="sm" variant="ghost" onClick={() => onEdit(product)}>
             <Edit className="h-4 w-4" />
           </Button>

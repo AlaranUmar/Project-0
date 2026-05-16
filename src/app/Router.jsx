@@ -18,6 +18,7 @@ import TransfersPage from "@/pages/dashboard/TransfersPage";
 import WarehouseDetailsPage from "@/pages/dashboard/WarehouseDetailsPage";
 import ProductsSale from "@/feautures/dashboard/Products-Sale";
 import NotificationsPage from "@/pages/dashboard/NotificationsPage";
+import ProductDetailsPage from "@/pages/dashboard/ProductDetailsPage";
 
 function Router() {
   return (
@@ -31,6 +32,10 @@ function Router() {
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products-sale" element={<ProductsSale />} />
+            <Route
+              path="/products/:productId"
+              element={<ProductDetailsPage />}
+            />
             <Route path="branches" element={<BranchesPage />} />
             <Route path="branches/:id" element={<BranchDetailsPage />} />
             <Route path="warehouses/:id" element={<WarehouseDetailsPage />} />
