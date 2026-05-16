@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { getBranchDashboardSummary } from "@/feautures/branches/branchService";
 import { toast } from "sonner";
-import Stats from "@/components/ui/stats";
 import { formatCompactNaira } from "@/utils/formatting";
+import Stats from "@/components/ui/Stats";
 function BranchesPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,12 +33,11 @@ function BranchesPage() {
     if (!query) return branches;
 
     const q = query.toLowerCase();
-
     return branches.filter(
       (p) =>
-        p.name?.toLowerCase().includes(q) ||
-        p.address?.toLowerCase().includes(q) ||
-        p.type?.toLowerCase().includes(q),
+        p.name?.toLowerCase()?.includes(q) ||
+        p.address?.toLowerCase()?.includes(q) ||
+        p.type?.toLowerCase()?.includes(q),
     );
   }, [query, branches]);
   const totalBranches = branches.length;
