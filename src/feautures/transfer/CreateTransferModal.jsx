@@ -16,7 +16,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { getLocations } from "../branches/branchService";
-
+import { getInventoryByLocation } from "../inventory/inventoryService";
 export default function CreateTransferModal({
   open,
   onClose,
@@ -28,7 +28,9 @@ export default function CreateTransferModal({
   const [toBranch, setToBranch] = useState("");
   const [items, setItems] = useState([{ product_id: "", quantity: 1 }]);
   const [loading, setLoading] = useState(false);
+  const [sourceInventory, setSourceInventory] = useState({});
 
+  // Reset states and pull branches on open
   useEffect(() => {
     if (!open) return;
 
@@ -40,14 +42,39 @@ export default function CreateTransferModal({
         console.error(err);
       }
 
-      // reset form
       setItems([{ product_id: "", quantity: 1 }]);
       setFromBranch("");
       setToBranch("");
+      setSourceInventory({});
     }
 
     init();
   }, [open]);
+
+  // Dynamic stock fetch when user changes original branch selection
+  useEffect(() => {
+    if (!fromBranch) {
+      setSourceInventory({});
+      return;
+    }
+
+    async function fetchStockLimits() {
+      try {
+        const data = await getInventoryByLocation(fromBranch);
+        const stockMap = {};
+
+        data?.forEach((row) => {
+          stockMap[String(row.product_id)] = Number(row.quantity);
+        });
+
+        setSourceInventory(stockMap);
+      } catch (err) {
+        console.error("Failed loading branch inventory balances", err);
+      }
+    }
+
+    fetchStockLimits();
+  }, [fromBranch]);
 
   const selectedProductIds = items.map((i) => String(i.product_id));
 
@@ -75,7 +102,6 @@ export default function CreateTransferModal({
 
   async function submit() {
     if (!fromBranch || !toBranch) {
-      alert("submitted");
       return alert("Select both source and destination");
     }
 
@@ -85,6 +111,27 @@ export default function CreateTransferModal({
 
     if (items.some((i) => !i.product_id)) {
       return alert("Please select products");
+    }
+
+    // Front-end inventory threshold checks
+    for (const item of items) {
+      const availableStock = sourceInventory[String(item.product_id)] || 0;
+      const targetProduct = products.find(
+        (p) => String(p.id) === String(item.product_id),
+      );
+      const productName = targetProduct ? targetProduct.name : "Selected item";
+
+      if (availableStock <= 0) {
+        return alert(
+          `"${productName}" is completely out of stock at this source location.`,
+        );
+      }
+
+      if (item.quantity > availableStock) {
+        return alert(
+          `Cannot transfer ${item.quantity} units of "${productName}". Only ${availableStock} available.`,
+        );
+      }
     }
 
     setLoading(true);
@@ -115,14 +162,10 @@ export default function CreateTransferModal({
           {/* Branch Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm">From</label>
-              <Select
-                key={fromBranch}
-                value={fromBranch}
-                onValueChange={setFromBranch}
-              >
+              <label className="text-sm font-medium">From</label>
+              <Select value={fromBranch} onValueChange={setFromBranch}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select Source" />
                 </SelectTrigger>
                 <SelectContent>
                   {locations.map((loc) => (
@@ -135,10 +178,10 @@ export default function CreateTransferModal({
             </div>
 
             <div>
-              <label className="text-sm">To</label>
+              <label className="text-sm font-medium">To</label>
               <Select value={toBranch} onValueChange={setToBranch}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select Dest" />
                 </SelectTrigger>
                 <SelectContent>
                   {locations.map((loc) => (
@@ -155,62 +198,108 @@ export default function CreateTransferModal({
             </div>
           </div>
 
-          {/* Products */}
+          {/* Products Panel */}
           <div className="space-y-3">
-            <label className="text-sm">Products</label>
+            <label className="text-sm font-medium">Products</label>
 
-            {items.map((item, i) => (
-              <div key={i} className="flex gap-2">
-                <Select
-                  value={item.product_id}
-                  onValueChange={(val) => updateItem(i, "product_id", val)}
+            {items.map((item, i) => {
+              const currentItemStock =
+                sourceInventory[String(item.product_id)] || 0;
+              const hasExceededStock =
+                item.product_id && item.quantity > currentItemStock;
+
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col gap-1 border-b pb-2 last:border-none"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Product" />
-                  </SelectTrigger>
+                  <div className="flex gap-2 items-center">
+                    <Select
+                      value={item.product_id}
+                      onValueChange={(val) => updateItem(i, "product_id", val)}
+                      disabled={!fromBranch}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue
+                          placeholder={
+                            fromBranch
+                              ? "Select Product"
+                              : "Choose 'From' branch first"
+                          }
+                        />
+                      </SelectTrigger>
 
-                  <SelectContent>
-                    {products.map((p) => {
-                      const isSelected =
-                        selectedProductIds.includes(String(p.id)) &&
-                        item.product_id !== String(p.id);
+                      <SelectContent>
+                        {products.map((p) => {
+                          const isSelected =
+                            selectedProductIds.includes(String(p.id)) &&
+                            item.product_id !== String(p.id);
 
-                      return (
-                        <SelectItem
-                          key={p.id}
-                          value={String(p.id)}
-                          disabled={isSelected}
-                        >
-                          <img
-                            key={p.id}
-                            src={p?.image_url}
-                            className="w-7 h-7 rounded-full border bg-white"
-                          />
-                          {p.name.slice(0, 20)}...
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                          const stockCount = sourceInventory[String(p.id)] || 0;
 
-                <Input
-                  type="number"
-                  className="w-20"
-                  value={item.quantity}
-                  onChange={(e) => updateItem(i, "quantity", e.target.value)}
-                />
+                          return (
+                            <SelectItem
+                              key={p.id}
+                              value={String(p.id)}
+                              disabled={isSelected || stockCount <= 0}
+                            >
+                              <div className="flex items-center justify-between w-full gap-4">
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={p?.image_url}
+                                    className="w-6 h-6 rounded-full border bg-white object-cover"
+                                    alt=""
+                                  />
+                                  <span>{p.name.slice(0, 15)}...</span>
+                                </div>
+                                <span
+                                  className={`text-xs font-semibold px-1.5 py-0.5 rounded ${stockCount > 0 ? "bg-secondary text-muted-foreground" : "bg-destructive/10 text-destructive"}`}
+                                >
+                                  Stock: {stockCount}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
 
-                <Button
-                  variant="ghost"
-                  onClick={() => removeItem(i)}
-                  disabled={items.length === 1}
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
+                    <Input
+                      type="number"
+                      className={`w-20 ${hasExceededStock ? "border-destructive text-destructive focus-visible:ring-destructive" : ""}`}
+                      value={item.quantity}
+                      min={1}
+                      disabled={!item.product_id}
+                      onChange={(e) =>
+                        updateItem(i, "quantity", e.target.value)
+                      }
+                    />
 
-            <Button variant="outline" onClick={addItem}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(i)}
+                      disabled={items.length === 1}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+
+                  {hasExceededStock && (
+                    <span className="text-xs text-destructive font-medium pl-1">
+                      Exceeds available stock ({currentItemStock} max)
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={addItem}
+              disabled={!fromBranch}
+            >
               + Add Product
             </Button>
           </div>
@@ -221,7 +310,7 @@ export default function CreateTransferModal({
             Cancel
           </Button>
 
-          <Button onClick={submit} disabled={loading}>
+          <Button onClick={submit} disabled={loading || !fromBranch}>
             {loading ? "Processing..." : "Create"}
           </Button>
         </DialogFooter>

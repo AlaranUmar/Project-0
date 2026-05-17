@@ -1,12 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
 
-/* ================================================================= */
-/* CORE PRODUCT OPERATIONS */
-/* ================================================================= */
-
-/**
- * Creates a brand new product profile along with its initial inventory balance distribution.
- */
 export async function createProduct(product) {
   try {
     const { data, error } = await supabase.rpc("create_product_with_stock", {
@@ -140,7 +133,7 @@ export async function getProductMovements(productId) {
       `
       id,
       quantity_change,
-      notes,
+      movement_type,
       created_at,
       locations (
         name

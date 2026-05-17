@@ -9,6 +9,7 @@ import { getBranchDashboardSummary } from "@/feautures/branches/branchService";
 import { toast } from "sonner";
 import { formatCompactNaira } from "@/utils/formatting";
 import Stats from "@/components/ui/Stats";
+import { Box, Users } from "lucide-react";
 function BranchesPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,15 +63,12 @@ function BranchesPage() {
       <div className="flex flex-col gap-3">
         <div className="grid gap-2 md:gap-5 grid-cols-2 md:grid-cols-4">
           <Stats title="Total Branches" value={totalBranches} />
-          <Stats
-            title="Branches With Low Stock"
-            value={branchesLowStock}
-            color="text-orange-500"
-          />
-          <Stats title="Total Staff" value={total_staff} />
+          <Stats title="Branches With Low Stock" value={branchesLowStock} />
+          <Stats title="Total Staffs" value={total_staff} icon={Users} />
           <Stats
             title="Total Inventory Value"
             value={formatCompactNaira(totalInventoryValue)}
+            icon={Box}
           />
         </div>
         <div className="grid grid-cols-1  gap-3">

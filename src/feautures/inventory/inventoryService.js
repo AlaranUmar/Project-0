@@ -18,3 +18,14 @@ export async function getInventory() {
   if (error) throw error;
   return data;
 }
+export async function getInventoryByLocation(locationId) {
+  if (!locationId) return [];
+
+  const { data, error } = await supabase
+    .from("inventory")
+    .select("product_id, quantity")
+    .eq("location_id", locationId);
+
+  if (error) throw error;
+  return data;
+}

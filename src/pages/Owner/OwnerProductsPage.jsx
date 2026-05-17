@@ -12,7 +12,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Box, Edit, ImageIcon, Loader2 } from "lucide-react";
+import {
+  Box,
+  Boxes,
+  Edit,
+  ImageIcon,
+  Loader2,
+  PackageMinus,
+  PackageX,
+} from "lucide-react";
 
 // Services & Utils
 import {
@@ -114,16 +122,20 @@ export default function OwnerProductsPage() {
     <div className="p-4 space-y-6">
       {/* ================= STATS SECTION ================= */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stats title="Total Unique Products" value={stats.totalCount} />
+        <Stats
+          title="Total Unique Products"
+          value={stats.totalCount}
+          icon={Boxes}
+        />
         <Stats
           title="Out Of Stock"
           value={stats.outOfStockCount}
-          color="text-destructive"
+          icon={PackageX}
         />
         <Stats
           title="Low Stock"
           value={stats.lowStockCount}
-          color="text-orange-500"
+          icon={PackageMinus}
         />
         <Stats
           title="Inventory Value"

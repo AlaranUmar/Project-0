@@ -29,6 +29,7 @@ import TransferOverlay from "./TransferOverlay";
 // ✅ UTILS
 import { formatCompactNaira } from "@/utils/formatting";
 import CreateTransferModal from "@/feautures/transfer/CreateTransferModal";
+import Stats from "@/components/ui/Stats";
 export default function OwnerTransfersPage() {
   const [transfers, setTransfers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -142,18 +143,10 @@ export default function OwnerTransfersPage() {
     <div className="p-4 space-y-5 min-h-screen">
       {/* ✅ STATS */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total" value={stats.total} />
-        <StatCard
-          label="Pending"
-          value={stats.pending}
-          color="text-orange-600"
-        />
-        <StatCard
-          label="In Transit"
-          value={stats.transit}
-          color="text-blue-600"
-        />
-        <StatCard label="Value" value={stats.value} />
+        <Stats title="Total" value={stats.total} />
+        <Stats title="Pending" value={stats.pending} color="text-orange-600" />
+        <Stats title="In Transit" value={stats.transit} color="text-blue-600" />
+        <Stats title="Value" value={stats.value} />
       </div>
 
       <Card className="border-none">
@@ -330,15 +323,5 @@ export default function OwnerTransfersPage() {
         onSubmit={onCreateTransfer}
       />
     </div>
-  );
-}
-
-// ✅ STAT CARD
-function StatCard({ label, value, color = "" }) {
-  return (
-    <Card className="p-4">
-      <p className="text-xs  uppercase">{label}</p>
-      <p className={`text-xl font-bold ${color}`}>{value}</p>
-    </Card>
   );
 }
