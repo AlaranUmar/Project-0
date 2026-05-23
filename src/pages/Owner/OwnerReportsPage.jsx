@@ -5,10 +5,7 @@ import { ReportsChart } from "@/feautures/ReportsChart";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import { Separator } from "@/components/ui/separator";
 import { useReports } from "@/context/ReportContext";
-import {
-  DateRangeSelector,
-  LocationSelector,
-} from "@/feautures/dashboard/Selectors";
+import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { Loader } from "lucide-react";
 
 export default function OwnerReportPage() {
