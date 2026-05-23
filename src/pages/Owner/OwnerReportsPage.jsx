@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getDateRange } from "@/feautures/branches/getDate";
+import { getDateRange } from "@/feautures/locations/getDate";
 import { ReportsChart } from "@/feautures/ReportsChart";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import { Separator } from "@/components/ui/separator";

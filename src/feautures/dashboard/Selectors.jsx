@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -38,42 +37,4 @@ export function DateRangeSelector({ value, onChange }) {
   ];
 
   return <CustomSelect value={value} onChange={onChange} options={options} />;
-}
-
-export function LocationSelector({ value, onChange, branches = [] }) {
-  const options = [
-    { value: "all", label: "All Branches" },
-    ...branches.map((b) => ({
-      value: b.branch_id,
-      label: b.branch_name,
-    })),
-  ];
-
-  return (
-    <CustomSelect
-      value={value}
-      onChange={onChange}
-      placeholder="Select Branch"
-      options={options}
-    />
-  );
-}
-
-export function PaymentMethodSelector({ onChange }) {
-  const [method, setMethod] = useState("cash");
-  const options = [
-    { value: "cash", label: "Cash" },
-    { value: "pos", label: "POS" },
-    { value: "transfer", label: "Transfer" },
-  ];
-  return (
-    <CustomSelect
-      value={method}
-      onChange={(v) => {
-        setMethod(v);
-        onChange(v);
-      }}
-      options={options}
-    />
-  );
 }

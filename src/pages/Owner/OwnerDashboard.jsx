@@ -3,7 +3,7 @@ import Alerts from "@/components/ui/Alerts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RecentStockMovement from "@/components/ui/RecentStockMovement";
 import { useReports } from "@/context/ReportContext";
-import { getDateRange } from "@/feautures/branches/getDate";
+import { getDateRange } from "@/feautures/locations/getDate";
 import BranchSalesChart from "@/feautures/dashboard/BranchSalesChart";
 import RevenueExpenseChart from "@/feautures/dashboard/RevenueExpenseChart";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";

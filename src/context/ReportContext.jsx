@@ -40,6 +40,7 @@ export function useReports(
             p_start_date: startDate,
             p_end_date: endDate,
             p_bucket: bucket,
+            p_selected_branch: selectedBranch, // 👈 Added matching filter here
           }),
         ]);
 

@@ -23,7 +23,7 @@ import {
   approveTransfer,
   rejectTransfer,
 } from "@/feautures/transfer/transferService";
-import { getLocations } from "@/feautures/branches/branchService";
+import { getLocations } from "@/feautures/locations/locationService";
 export default function TransferOverlay({
   transferId,
   transfers,

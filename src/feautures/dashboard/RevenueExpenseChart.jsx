@@ -7,7 +7,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  ReferenceArea,
   ComposedChart,
 } from "recharts";
 import {
@@ -21,21 +20,50 @@ import {
   startOfYear,
   endOfYear,
   eachMonthOfInterval,
-  eachWeekOfInterval,
+  parseISO,
 } from "date-fns";
 import { formatCompactNaira } from "@/utils/formatting";
 
-const BUSINESS_START = 4;
-const BUSINESS_END = 21;
+/**
+ * Creates consistent map keys that align frontend calculations with backend dates
+ */
+const getMapKey = (view, dateInstance) => {
+  const d = new Date(dateInstance.getTime());
+
+  if (view === "today") {
+    // Format safely by Hour bucket: "2026-4-23-14"
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+  }
+
+  if (view === "year") {
+    // Format safely by Month bucket: "2026-4"
+    return `${d.getFullYear()}-${d.getMonth()}`;
+  }
+
+  // Format securely by Day bucket for Week and Month views: "2026-4-23"
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
 
 /**
- * Prepare chart data with continuous timeline + O(n) lookup
+ * Safely parses database ISO timestamp strings into clean local dates without UTC shifts
  */
+const parseToLocalDate = (rawString) => {
+  if (!rawString) return new Date();
+
+  // Replace trailing spacing anomalies to create a standard ISO string layout
+  const normalizedString = rawString.includes(" ")
+    ? rawString.replace(" ", "T")
+    : rawString;
+
+  const parsed = parseISO(normalizedString);
+  return isNaN(parsed.getTime()) ? new Date(rawString) : parsed;
+};
+
 const prepareChartData = (view, rawData) => {
   const now = new Date();
   let skeleton = [];
 
-  // 🔹 1. Create timeline skeleton based on view
+  // 1. Build out the required chart data template arrays
   switch (view) {
     case "today":
       skeleton = eachHourOfInterval({
@@ -50,10 +78,9 @@ const prepareChartData = (view, rawData) => {
       });
       break;
     case "month":
-      skeleton = eachWeekOfInterval({
+      skeleton = eachDayOfInterval({
         start: new Date(now.getFullYear(), now.getMonth(), 1),
         end: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-        weekStartsOn: 1,
       });
       break;
     case "year":
@@ -62,41 +89,39 @@ const prepareChartData = (view, rawData) => {
         end: endOfYear(now),
       });
       break;
-    case "total": // Aligned with OwnerDashboard
+    case "total":
     default:
-      return [...rawData].sort((a, b) => new Date(a.name) - new Date(b.name));
+      return [...rawData].sort((a, b) => {
+        const dateA = parseToLocalDate(a.period || a.name);
+        const dateB = parseToLocalDate(b.period || b.name);
+        return dateA.getTime() - dateB.getTime();
+      });
   }
 
-  // 🔹 2. Index raw data (O(n)) for quick lookup
+  // 2. Index your records using strict string representations
   const indexed = new Map();
   rawData.forEach((d) => {
-    const date = new Date(d.name);
-    let key;
-    if (view === "today") key = new Date(date).setMinutes(0, 0, 0);
-    else if (view === "week") key = new Date(date).setHours(0, 0, 0, 0);
-    else if (view === "month")
-      key = startOfWeek(date, { weekStartsOn: 1 }).getTime();
-    else if (view === "year")
-      key = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+    const rawKey = d.period || d.name;
+    if (!rawKey) return;
 
-    indexed.set(key, d);
+    const parsedDate = parseToLocalDate(rawKey);
+    if (isNaN(parsedDate.getTime())) return;
+
+    const stringKey = getMapKey(view, parsedDate);
+    indexed.set(stringKey, d);
   });
 
-  // 🔹 3. Merge skeleton + data
+  // 3. Match calendar entries with your data metrics
   return skeleton.map((tickDate) => {
-    let key;
-    if (view === "today") key = tickDate.setMinutes(0, 0, 0);
-    else if (view === "week") key = tickDate.setHours(0, 0, 0, 0);
-    else if (view === "month")
-      key = startOfWeek(tickDate, { weekStartsOn: 1 }).getTime();
-    else if (view === "year")
-      key = new Date(tickDate.getFullYear(), tickDate.getMonth(), 1).getTime();
+    const stringKey = getMapKey(view, tickDate);
+    const existingData = indexed.get(stringKey);
 
-    const existingData = indexed.get(key);
     return {
-      name: key,
-      revenue: Number(existingData?.revenue || 0),
-      expense: Number(existingData?.expense || 0),
+      name: tickDate.getTime(),
+      revenue: Number(existingData?.total_sales || existingData?.revenue || 0),
+      expense: Number(
+        existingData?.total_expenses || existingData?.expense || 0,
+      ),
     };
   });
 };
@@ -114,7 +139,7 @@ function RevenueExpenseChart({ data = [], view }) {
       case "week":
         return format(date, "EEE");
       case "month":
-        return `Week ${Math.ceil(date.getDate() / 7)}`;
+        return format(date, "MMM d");
       case "year":
         return format(date, "MMM");
       default:
@@ -126,7 +151,7 @@ function RevenueExpenseChart({ data = [], view }) {
     if (!active || !payload?.length) return null;
     return (
       <div className="bg-white p-3 rounded-lg shadow-xl border border-slate-100 text-[11px]">
-        <p className="font-bold mb-2 text-slate-500 border-bottom pb-1">
+        <p className="font-bold mb-2 text-slate-500 border-b pb-1">
           {formatXAxis(label)}
         </p>
         {payload.map((entry, i) => (
@@ -189,22 +214,13 @@ function RevenueExpenseChart({ data = [], view }) {
           }}
         />
 
-        {view === "today" && (
-          <ReferenceArea
-            x1={new Date().setHours(BUSINESS_START, 0, 0, 0)}
-            x2={new Date().setHours(BUSINESS_END, 0, 0, 0)}
-            fill="#f8fafc"
-            fillOpacity={0.5}
-          />
-        )}
-
         <Line
           type="monotone"
           dataKey="revenue"
           name="Revenue"
           stroke="#16a34a"
           strokeWidth={2.5}
-          dot={chartData.length < 15}
+          dot={chartData.length < 35}
           activeDot={{ r: 5, strokeWidth: 0 }}
         />
         <Line

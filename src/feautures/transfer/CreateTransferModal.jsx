@@ -15,7 +15,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { getLocations } from "../branches/branchService";
+import { getLocations } from "../locations/locationService";
 import { getInventoryByLocation } from "../inventory/inventoryService";
 export default function CreateTransferModal({
   open,
@@ -24,13 +24,12 @@ export default function CreateTransferModal({
   onSubmit,
 }) {
   const [locations, setLocations] = useState([]);
-  const [fromBranch, setFromBranch] = useState("");
-  const [toBranch, setToBranch] = useState("");
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
   const [items, setItems] = useState([{ product_id: "", quantity: 1 }]);
   const [loading, setLoading] = useState(false);
   const [sourceInventory, setSourceInventory] = useState({});
 
-  // Reset states and pull branches on open
   useEffect(() => {
     if (!open) return;
 
@@ -43,24 +42,23 @@ export default function CreateTransferModal({
       }
 
       setItems([{ product_id: "", quantity: 1 }]);
-      setFromBranch("");
-      setToBranch("");
+      setFromLocation("");
+      setToLocation("");
       setSourceInventory({});
     }
 
     init();
   }, [open]);
 
-  // Dynamic stock fetch when user changes original branch selection
   useEffect(() => {
-    if (!fromBranch) {
+    if (!fromLocation) {
       setSourceInventory({});
       return;
     }
 
     async function fetchStockLimits() {
       try {
-        const data = await getInventoryByLocation(fromBranch);
+        const data = await getInventoryByLocation(fromLocation);
         const stockMap = {};
 
         data?.forEach((row) => {
@@ -74,7 +72,7 @@ export default function CreateTransferModal({
     }
 
     fetchStockLimits();
-  }, [fromBranch]);
+  }, [fromLocation]);
 
   const selectedProductIds = items.map((i) => String(i.product_id));
 
@@ -101,11 +99,11 @@ export default function CreateTransferModal({
   };
 
   async function submit() {
-    if (!fromBranch || !toBranch) {
+    if (!fromLocation || !toLocation) {
       return alert("Select both source and destination");
     }
 
-    if (fromBranch === toBranch) {
+    if (fromLocation === toLocation) {
       return alert("Source and destination cannot be the same");
     }
 
@@ -138,8 +136,8 @@ export default function CreateTransferModal({
 
     try {
       await onSubmit({
-        from_location_id: fromBranch,
-        to_location_id: toBranch,
+        from_location_id: fromLocation,
+        to_location_id: toLocation,
         items,
       });
 
@@ -159,11 +157,10 @@ export default function CreateTransferModal({
         </DialogHeader>
 
         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-          {/* Branch Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">From</label>
-              <Select value={fromBranch} onValueChange={setFromBranch}>
+              <Select value={fromLocation} onValueChange={setFromLocation}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Source" />
                 </SelectTrigger>
@@ -171,6 +168,9 @@ export default function CreateTransferModal({
                   {locations.map((loc) => (
                     <SelectItem key={loc?.id} value={String(loc?.id)}>
                       {loc.name.toUpperCase()}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {loc.type.slice(0, 1).toUpperCase()}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -179,7 +179,7 @@ export default function CreateTransferModal({
 
             <div>
               <label className="text-sm font-medium">To</label>
-              <Select value={toBranch} onValueChange={setToBranch}>
+              <Select value={toLocation} onValueChange={setToLocation}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Dest" />
                 </SelectTrigger>
@@ -188,9 +188,12 @@ export default function CreateTransferModal({
                     <SelectItem
                       key={loc?.id}
                       value={String(loc?.id)}
-                      disabled={String(loc?.id) === fromBranch}
+                      disabled={String(loc?.id) === fromLocation}
                     >
                       {loc.name.toUpperCase()}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {loc.type.slice(0, 1).toUpperCase()}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -217,12 +220,12 @@ export default function CreateTransferModal({
                     <Select
                       value={item.product_id}
                       onValueChange={(val) => updateItem(i, "product_id", val)}
-                      disabled={!fromBranch}
+                      disabled={!fromLocation}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue
                           placeholder={
-                            fromBranch
+                            fromLocation
                               ? "Select Product"
                               : "Choose 'From' branch first"
                           }
@@ -298,7 +301,7 @@ export default function CreateTransferModal({
               variant="outline"
               size="sm"
               onClick={addItem}
-              disabled={!fromBranch}
+              disabled={!fromLocation}
             >
               + Add Product
             </Button>
@@ -310,7 +313,15 @@ export default function CreateTransferModal({
             Cancel
           </Button>
 
-          <Button onClick={submit} disabled={loading || !fromBranch}>
+          <Button
+            onClick={submit}
+            disabled={
+              loading ||
+              !fromLocation ||
+              !toLocation ||
+              items.some((i) => !i.product_id)
+            }
+          >
             {loading ? "Processing..." : "Create"}
           </Button>
         </DialogFooter>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { getFinancials, getReports } from "@/feautures/dashboard/reportService";
-import { getDateRange } from "@/feautures/branches/getDate";
+import { getDateRange } from "@/feautures/locations/getDate";
 import { ReportsChart } from "@/feautures/ReportsChart";
 import { Separator } from "@/components/ui/separator";
 import { DateRangeSelector } from "@/feautures/dashboard/Selectors";

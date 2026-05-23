@@ -1,9 +1,9 @@
 import {
   LayoutDashboard,
   Package,
-  Users,
+  // Users,
   BarChart3,
-  Settings,
+  // Settings,
   User2,
   Bus,
   Building2,
@@ -15,7 +15,7 @@ export const sidebarMenu = {
   owner: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: Package },
-    { name: "Branches", path: "/branches", icon: Building2 },
+    { name: "Locations", path: "/locations", icon: Building2 },
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
@@ -27,7 +27,7 @@ export const sidebarMenu = {
   admin: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: Package },
-    { name: "Branches", path: "/branches", icon: Building2 },
+    { name: "Locations", path: "/locations", icon: Building2 },
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },

@@ -10,8 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { restockProduct } from "@/feautures/products/productService";
-import { getWarehouseLocations } from "@/feautures/branches/branchService";
+import { getLocationsByType } from "@/feautures/locations/locationService";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState("");
   const [warehouse, setWarehouse] = useState("");
@@ -21,7 +28,7 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
   useEffect(() => {
     async function loadWarehouses() {
       try {
-        const data = await getWarehouseLocations();
+        const data = await getLocationsByType("warehouse");
         setWarehouses(data || []);
       } catch (err) {
         console.error("Failed to load warehouses", err);
@@ -89,18 +96,22 @@ export default function RestockDialog({ product, isOpen, onClose, onSuccess }) {
           {/* Warehouse Selection */}
           <div>
             <Label>Warehouse</Label>
-            <select
-              className="w-full border rounded-md p-2"
+
+            <Select
               value={warehouse}
-              onChange={(e) => setWarehouse(e.target.value)}
+              onValueChange={(value) => setWarehouse(value)}
             >
-              <option value="">Select warehouse</option>
-              {warehouses.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full border rounded-md p-2">
+                <SelectValue placeholder="Select warehouse" />
+              </SelectTrigger>
+              <SelectContent>
+                {warehouses.map((w) => (
+                  <SelectItem key={w.id} value={w.id}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

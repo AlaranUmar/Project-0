@@ -9,106 +9,144 @@ import {
   TableCell,
   TableHead,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+
 import { getSales } from "@/feautures/sales/Sales";
-import { Banknote, CreditCard, Plane, Send, Wallet } from "lucide-react";
+
+import { Banknote, CreditCard, Send, Wallet } from "lucide-react";
+
 import Stats from "@/components/ui/Stats";
+
 export default function OwnerSalesPage() {
-  const [sales, setSales] = useState(null);
+  const [sales, setSales] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function fetchSales() {
-      const data = await getSales();
-      setSales(data);
-      console.log(data);
+      try {
+        setLoading(true);
+        const data = await getSales();
+        setSales(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch sales:", err);
+        setSales([]);
+      } finally {
+        setLoading(false);
+      }
     }
+
     fetchSales();
   }, []);
-  if (!sales) {
+
+  const filteredSales = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    if (!term) return sales;
+
+    return (sales ?? []).filter((sale) => {
+      const saleId = sale.sale_id?.toLowerCase() || "";
+      const cashier = sale.cashier_name?.toLowerCase() || "";
+      const branch = sale.branch_name?.toLowerCase() || "";
+
+      const itemsMatch = (sale.items ?? []).some((p) =>
+        (p.product_name || "").toLowerCase().includes(term),
+      );
+
+      return (
+        saleId.includes(term) ||
+        cashier.includes(term) ||
+        branch.includes(term) ||
+        itemsMatch
+      );
+    });
+  }, [sales, search]);
+
+  // GLOBAL STATS (NOT FILTERED — FIXED)
+  const totalTransferRevenue = useMemo(
+    () =>
+      (sales ?? []).reduce(
+        (sum, sale) =>
+          sum + (sale.payment_method === "transfer" ? sale.amount : 0),
+        0,
+      ),
+    [sales],
+  );
+
+  const totalCashRevenue = useMemo(
+    () =>
+      (sales ?? []).reduce(
+        (sum, sale) => sum + (sale.payment_method === "cash" ? sale.amount : 0),
+        0,
+      ),
+    [sales],
+  );
+
+  const totalPOSRevenue = useMemo(
+    () =>
+      (sales ?? []).reduce(
+        (sum, sale) => sum + (sale.payment_method === "pos" ? sale.amount : 0),
+        0,
+      ),
+    [sales],
+  );
+
+  const totalSales = sales.length;
+
+  if (loading) {
     return (
-      <div className="p-4">
-        <p>Loading sales...</p>
+      <div className="p-4 text-sm text-muted-foreground animate-pulse">
+        Loading sales data...
       </div>
     );
   }
-  const filteredSales = useMemo(() => {
-    const term = search.toLowerCase();
-    return sales.filter(
-      (sale) =>
-        sale.sale_id.toLowerCase().includes(term) ||
-        sale.cashier_name.toLowerCase().includes(term) ||
-        sale.items.some((p) => p.product_name.toLowerCase().includes(term)) ||
-        sale.branch_name.toLowerCase().includes(term),
-    );
-  }, [sales, search]);
-  console.log(sales);
-  const totalTransferRevenue = filteredSales.reduce(
-    (sum, sale) => sum + (sale.payment_method === "transfer" ? sale.amount : 0),
-    0,
-  );
-  const totalCashRevenue = filteredSales.reduce(
-    (sum, sale) => sum + (sale.payment_method === "cash" ? sale.amount : 0),
-    0,
-  );
-  const totalPOSRevenue = filteredSales.reduce(
-    (sum, sale) => sum + (sale.payment_method === "pos" ? sale.amount : 0),
-    0,
-  );
-  const totalSales = filteredSales.length;
+
   return (
     <div className="p-1 md:p-4 space-y-4">
+      {/* STATS */}
       <div className="grid gap-3 md:gap-5 grid-cols-2 md:grid-cols-4">
-        <Stats title={"Total Sales"} value={totalSales} icon={Wallet} />
+        <Stats title="Total Sales" value={totalSales} icon={Wallet} />
         <Stats
-          title={"Transfer Revenue"}
+          title="Transfer Revenue"
           value={totalTransferRevenue}
           icon={Send}
         />
-        <Stats
-          title={"Cash Revenue"}
-          value={totalCashRevenue}
-          icon={Banknote}
-        />
-        <Stats
-          title={"POS Revenue"}
-          value={totalPOSRevenue}
-          icon={CreditCard}
-        />
+        <Stats title="Cash Revenue" value={totalCashRevenue} icon={Banknote} />
+        <Stats title="POS Revenue" value={totalPOSRevenue} icon={CreditCard} />
       </div>
+
+      {/* TABLE */}
       <Card>
         <CardHeader>
           <CardTitle>Sales Management</CardTitle>
         </CardHeader>
+
         <CardContent>
+          {/* SEARCH */}
           <div className="flex items-center mb-4">
             <Input
-              placeholder="Search sales by ID, cashier name, product name, or branch"
+              placeholder="Search sales by ID, cashier, product, or branch"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 mr-2"
+              className="flex-1"
             />
           </div>
 
           <Table>
             <TableHeader>
-              <TableRow className={"bg-accent"}>
-                <TableHead className={"w-10"}>
-                  <div className="flex justify-center items-center h-full">
-                    <Input
-                      type={"checkbox"}
-                      className={"size-3.5 text-white"}
-                    />
-                  </div>
+              <TableRow className="bg-accent">
+                <TableHead className="w-10 text-center">
+                  <input type="checkbox" className="size-3.5" />
                 </TableHead>
                 <TableHead>Id</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Branch</TableHead>
-                <TableHead>Cashier Name</TableHead>
-                <TableHead>Paid with</TableHead>
-                <TableHead>items</TableHead>
+                <TableHead>Cashier</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Items</TableHead>
                 <TableHead>Amount</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {filteredSales.map((sale) => (
                 <SalesRow key={sale.sale_id} sale={sale} />
@@ -131,35 +169,38 @@ function SalesRow({ sale }) {
     items,
     amount,
   } = sale;
+
   return (
-    <TableRow key={sale_id} className={"hover:bg-gray-50"}>
-      <TableCell className={"font-mono"}>
-        {" "}
-        <div className="flex justify-center items-center h-full">
-          <Input type={"checkbox"} className={"size-3.5 text-white"} />
-        </div>
+    <TableRow className="hover:bg-gray-50">
+      <TableCell className="text-center">
+        <input type="checkbox" className="size-3.5" />
       </TableCell>
-      <TableCell className={"font-mono"}>{sale_id.slice(0, 8)}</TableCell>
+
+      <TableCell className="font-mono">{sale_id?.slice(0, 8)}</TableCell>
+
       <TableCell>{new Date(created_at).toLocaleString()}</TableCell>
+
       <TableCell>{branch_name}</TableCell>
+
       <TableCell>{cashier_name}</TableCell>
+
       <TableCell className="capitalize">{payment_method}</TableCell>
+
       <TableCell>
         <div className="flex flex-wrap gap-1">
-          {items.map((p) => (
+          {(items ?? []).map((p, idx) => (
             <span
-              key={p.product_name}
-              className="px-2 py-1 bg-secondary rounded text-[10px] space-x-1 flex items-center max-w-30"
+              key={`${sale_id}-${idx}`}
+              className="px-2 py-1 bg-secondary rounded text-[10px] flex items-center gap-1 max-w-32"
             >
-              <p className="truncate max-w-30 text-ellipsis inline-block">
-                {p.product_name}
-              </p>
-              ({p.quantity})
+              <span className="truncate max-w-24">{p.product_name}</span>
+              <span>({p.quantity})</span>
             </span>
           ))}
         </div>
       </TableCell>
-      <TableCell>₦{amount.toLocaleString()}</TableCell>
+
+      <TableCell>₦{Number(amount || 0).toLocaleString()}</TableCell>
     </TableRow>
   );
 }

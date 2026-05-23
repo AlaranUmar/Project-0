@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getBranchDetails } from "@/feautures/branches/branchService";
+import { getBranchDetails } from "@/feautures/locations/locationService";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {

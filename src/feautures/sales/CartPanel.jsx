@@ -12,6 +12,13 @@ import {
   CreditCard,
   Send,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { checkoutCart } from "./checkoutService";
 import { useState, useMemo, useEffect } from "react";
 
@@ -192,15 +199,20 @@ function CartPanel({ profile, staff }) {
         <div className="flex flex-col gap-3 border-t pt-3">
           {payments.map((payment, index) => (
             <div key={index} className="flex gap-2">
-              <select
+              <Select
                 value={payment.method}
-                onChange={(e) => updatePayment(index, "method", e.target.value)}
-                className="border rounded p-2 text-sm"
+                onValueChange={(value) => updatePayment(index, "method", value)}
               >
-                <option value="cash">Cash</option>
-                <option value="pos">POS</option>
-                <option value="transfer">Transfer</option>
-              </select>
+                <SelectTrigger className="border rounded p-2 text-sm w-[180px]">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="pos">POS</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Input
                 type="number"
                 placeholder="Amount"

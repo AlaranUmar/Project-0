@@ -18,10 +18,15 @@ import {
   getCategories,
   getTags,
 } from "@/feautures/products/productService";
-import { getLocations } from "@/feautures/branches/branchService";
-/* ============================= */
-/* Add Product Form Component    */
-/* ============================= */
+import { getLocationsByType } from "@/feautures/locations/locationService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -46,7 +51,7 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
     async function fetchData() {
       const [cats, locs, tgs] = await Promise.all([
         getCategories(),
-        getLocations(),
+        getLocationsByType("warehouse"),
         getTags(),
       ]);
       setCategories(cats || []);
@@ -169,19 +174,21 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <select
-              className="w-full border rounded-md p-2 bg-background text-sm"
+            <Select
               value={form.category_id}
-              onChange={(e) => handleChange("category_id", e.target.value)}
-              required
+              onValueChange={(value) => handleChange("category_id", value)}
             >
-              <option value="">Select Category</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full border rounded-md p-2 bg-background text-sm">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -225,21 +232,21 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
 
           <div className="space-y-2">
             <Label>Warehouse Location</Label>
-            <select
-              className="w-full border rounded-md p-2 bg-background text-sm"
+            <Select
               value={form.location_id}
-              onChange={(e) => handleChange("location_id", e.target.value)}
-              required
+              onValueChange={(value) => handleChange("location_id", value)}
             >
-              <option value="">Select Warehouse</option>
-              {locations
-                .filter((l) => l.type === "warehouse")
-                .map((l) => (
-                  <option key={l.id} value={l.id}>
+              <SelectTrigger className="w-full border rounded-md p-2 bg-background text-sm">
+                <SelectValue placeholder="Select Warehouse" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
                     {l.name}
-                  </option>
+                  </SelectItem>
                 ))}
-            </select>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
         <CardFooter className="flex justify-end gap-2">
@@ -255,9 +262,6 @@ export default function AddProductForm({ onSuccess, onClose, currentUserId }) {
   );
 }
 
-/* ============================= */
-/* Dialog Wrapper Components     */
-/* ============================= */
 export function AddProductDialog({ isOpen, onClose, onSuccess }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
