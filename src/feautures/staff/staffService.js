@@ -14,6 +14,16 @@ export async function getStaff(userId) {
   if (error) throw error;
   return data;
 }
+export async function getStaffBasicDetails(staffId) {
+  const { data, error } = await supabase.rpc("get_staff_basic_details", {
+    p_staff_id: staffId,
+  });
+
+  if (error) throw error;
+
+  return data?.[0] || null;
+}
+
 export async function getStaffDetails(staffId = null) {
   let query = supabase
     .from("staff_summary_view")
@@ -29,4 +39,22 @@ export async function getStaffDetails(staffId = null) {
 
   if (error) throw error;
   return data;
+}
+export async function getCashierDetails(staffId) {
+  const { data, error } = await supabase.rpc("get_cashier_details", {
+    p_staff_id: staffId,
+  });
+
+  if (error) throw error;
+
+  return data?.[0];
+}
+export async function getManagerDetails(staffId) {
+  const { data, error } = await supabase.rpc("get_manager_details", {
+    p_staff_id: staffId,
+  });
+
+  if (error) throw error;
+
+  return data?.[0];
 }

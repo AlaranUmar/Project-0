@@ -50,10 +50,23 @@ const getMapKey = (view, dateInstance) => {
 const parseToLocalDate = (rawString) => {
   if (!rawString) return new Date();
 
+  // If backend provided a short date string (e.g. "2026-04-23"), extract numbers directly to avoid timezone drift
+  if (typeof rawString === "string" && rawString.length <= 10) {
+    const parts = rawString.split("-");
+    if (parts.length === 3) {
+      return new Date(
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10) - 1,
+        parseInt(parts[2], 10),
+      );
+    }
+  }
+
   // Replace trailing spacing anomalies to create a standard ISO string layout
-  const normalizedString = rawString.includes(" ")
-    ? rawString.replace(" ", "T")
-    : rawString;
+  const normalizedString =
+    typeof rawString === "string" && rawString.includes(" ")
+      ? rawString.replace(" ", "T")
+      : rawString;
 
   const parsed = parseISO(normalizedString);
   return isNaN(parsed.getTime()) ? new Date(rawString) : parsed;
@@ -63,7 +76,26 @@ const prepareChartData = (view, rawData) => {
   const now = new Date();
   let skeleton = [];
 
-  // 1. Build out the required chart data template arrays
+  // 1. Handle "total" view cleanly by normalizing metrics and sorting raw items directly
+  if (view === "total" || !view) {
+    return [...rawData]
+      .map((d) => {
+        const rawKey = d.period || d.name;
+        const parsedDate = parseToLocalDate(rawKey);
+
+        return {
+          // Convert string timestamps to epoch integers so components render accurately
+          name: isNaN(parsedDate.getTime())
+            ? now.getTime()
+            : parsedDate.getTime(),
+          revenue: Number(d.total_sales || d.revenue || 0),
+          expense: Number(d.total_expenses || d.expense || 0),
+        };
+      })
+      .sort((a, b) => a.name - b.name);
+  }
+
+  // 2. Build out the required chart data template arrays for fixed intervals
   switch (view) {
     case "today":
       skeleton = eachHourOfInterval({
@@ -89,16 +121,9 @@ const prepareChartData = (view, rawData) => {
         end: endOfYear(now),
       });
       break;
-    case "total":
-    default:
-      return [...rawData].sort((a, b) => {
-        const dateA = parseToLocalDate(a.period || a.name);
-        const dateB = parseToLocalDate(b.period || b.name);
-        return dateA.getTime() - dateB.getTime();
-      });
   }
 
-  // 2. Index your records using strict string representations
+  // 3. Index your records AND sum them up to capture all transaction spikes
   const indexed = new Map();
   rawData.forEach((d) => {
     const rawKey = d.period || d.name;
@@ -108,20 +133,31 @@ const prepareChartData = (view, rawData) => {
     if (isNaN(parsedDate.getTime())) return;
 
     const stringKey = getMapKey(view, parsedDate);
-    indexed.set(stringKey, d);
+
+    const rev = Number(d.total_sales || d.revenue || 0);
+    const exp = Number(d.total_expenses || d.expense || 0);
+
+    // If bucket already exists, add values together instead of overwriting
+    if (indexed.has(stringKey)) {
+      const existing = indexed.get(stringKey);
+      indexed.set(stringKey, {
+        revenue: existing.revenue + rev,
+        expense: existing.expense + exp,
+      });
+    } else {
+      indexed.set(stringKey, { revenue: rev, expense: exp });
+    }
   });
 
-  // 3. Match calendar entries with your data metrics
+  // 4. Match calendar entries with your data metrics
   return skeleton.map((tickDate) => {
     const stringKey = getMapKey(view, tickDate);
     const existingData = indexed.get(stringKey);
 
     return {
       name: tickDate.getTime(),
-      revenue: Number(existingData?.total_sales || existingData?.revenue || 0),
-      expense: Number(
-        existingData?.total_expenses || existingData?.expense || 0,
-      ),
+      revenue: existingData ? existingData.revenue : 0,
+      expense: existingData ? existingData.expense : 0,
     };
   });
 };
@@ -142,8 +178,9 @@ function RevenueExpenseChart({ data = [], view }) {
         return format(date, "MMM d");
       case "year":
         return format(date, "MMM");
+      case "total":
       default:
-        return format(date, "MMM d");
+        return format(date, "MMM d, yyyy");
     }
   };
 

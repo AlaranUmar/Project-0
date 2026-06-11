@@ -145,7 +145,7 @@ export default function OwnerProductsPage() {
       </div>
 
       {/* ================= MAIN INVENTORY TABLE ================= */}
-      <Card className="shadow-sm">
+      <Card className="">
         <CardHeader className="space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>

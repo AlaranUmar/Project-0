@@ -10,12 +10,6 @@ import ReportsPage from "@/pages/dashboard/ReportsPage";
 import PublicRoute from "@/components/shared/PublicRoute";
 import SalesPage from "@/pages/dashboard/SalesPage";
 
-// import CustomersPage from "@/pages/dashboard/CustomersPage";
-// import SettingsPage from "@/pages/dashboard/SettingsPage";
-// import BranchesPage from "@/pages/dashboard/BranchesPage";
-// import BranchDetailsPage from "@/pages/dashboard/BranchDetailsPage";
-// import WarehouseDetailsPage from "@/pages/dashboard/WarehouseDetailsPage";
-
 import StaffsPage from "@/pages/dashboard/StaffsPage";
 import TransfersPage from "@/pages/dashboard/TransfersPage";
 import ProductsSale from "@/feautures/dashboard/Products-Sale";
@@ -23,6 +17,7 @@ import NotificationsPage from "@/pages/dashboard/NotificationsPage";
 import ProductDetailsPage from "@/pages/dashboard/ProductDetailsPage";
 import LocationsPage from "@/pages/dashboard/LocationsPage";
 import LocationDetailsPage from "@/pages/dashboard/LocationDetailsPage";
+import StaffDetailsPage from "@/pages/dashboard/StaffDetailsPage";
 
 function Router() {
   return (
@@ -42,14 +37,14 @@ function Router() {
             />
             <Route path="locations" element={<LocationsPage />} />
             <Route path="locations/:id" element={<LocationDetailsPage />} />
+
             <Route path="staffs" element={<StaffsPage />} />
+            <Route path="staffs/:id" element={<StaffDetailsPage />} />
+
             <Route path="sales" element={<SalesPage />} />
             <Route path="transfers" element={<TransfersPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-
-            {/* <Route path="customers" element={<CustomersPage />} /> */}
-            {/* <Route path="settings" element={<SettingsPage />} /> */}
           </Route>
         </Route>
       </Routes>
