@@ -16,6 +16,8 @@ import {
   RefreshCw,
   UserCog,
   ClipboardList,
+  ShoppingCart,
+  TrendingUp,
 } from "lucide-react";
 
 import {
@@ -49,6 +51,7 @@ import Stats from "@/components/ui/Stats";
 
 import { getManagerDetails } from "@/feautures/staff/staffService";
 import Initials from "@/components/Initials";
+import { formatCompactNaira } from "@/utils/formatting";
 
 export default function ManagerDetailsPage() {
   const { id } = useParams();
@@ -98,8 +101,8 @@ export default function ManagerDetailsPage() {
       setRefreshing(true);
 
       const result = await getManagerDetails(id);
-
-      setData(result);
+      console.log(result);
+      setData(result, "manager");
     } catch (err) {
       console.log(err);
     } finally {
@@ -147,9 +150,9 @@ export default function ManagerDetailsPage() {
     <div className="space-y-5 p-3">
       {/* HEADER */}
       <Card className="rounded-2xl">
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
               <Button
                 size="icon"
                 variant="outline"
@@ -158,21 +161,23 @@ export default function ManagerDetailsPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
 
-              <div className="flex items-start gap-3">
-                <Initials name={data.name} />
+              <Initials name={data.full_name} />
 
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl font-bold tracking-tight">
-                      {data.name}
-                    </h1>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold">{data.full_name}</h1>
 
-                    <Badge>Manager</Badge>
-                  </div>
+                  <Badge>{data.user_role}</Badge>
 
-                  <p className="text-sm text-muted-foreground">
-                    {data.branch_name || "Assigned Branch"}
-                  </p>
+                  <Badge variant={data.is_active ? "default" : "destructive"}>
+                    {data.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+
+                <div className="mt-1 flex flex-col gap-1 text-sm text-muted-foreground">
+                  <span>{data.email || "No email"}</span>
+
+                  <span>{data.location_name}</span>
                 </div>
               </div>
             </div>
@@ -196,8 +201,39 @@ export default function ManagerDetailsPage() {
       {/* STATS */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stats
+          title="Total Sales"
+          value={`₦${formatCompactNaira(data.total_sales || 0).toLocaleString()}`}
+          icon={ShoppingCart}
+          color="text-green-600"
+        />
+
+        <Stats
+          title="Today's Sales"
+          value={`₦${formatCompactNaira(data.today_sales || 0).toLocaleString()}`}
+          icon={TrendingUp}
+          color="text-emerald-600"
+        />
+
+        <Stats
+          title="Transactions"
+          value={data.total_transactions || 0}
+          icon={Activity}
+          color="text-blue-600"
+        />
+
+        <Stats
+          title="Average Sale"
+          value={`₦${formatCompactNaira(data.average_sale || 0).toLocaleString()}`}
+          icon={Wallet}
+          color="text-purple-600"
+        />
+      </div>
+
+      {/* QUICK STATS */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stats
           title="Expenses"
-          value={`₦${Number(
+          value={`₦${formatCompactNaira(
             data.total_expenses_recorded || 0,
           ).toLocaleString()}`}
           icon={Wallet}
@@ -205,14 +241,14 @@ export default function ManagerDetailsPage() {
         />
 
         <Stats
-          title="Transfers Requested"
+          title="Requested"
           value={data.transfers_requested || 0}
           icon={Inbox}
           color="text-blue-600"
         />
 
         <Stats
-          title="Transfers Approved"
+          title="Approved"
           value={data.transfers_approved || 0}
           icon={CheckCircle}
           color="text-green-600"
@@ -226,164 +262,90 @@ export default function ManagerDetailsPage() {
         />
       </div>
 
-      {/* QUICK STATS */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <Card className="rounded-2xl">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Transfers Dispatched
-              </p>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Branch Information</CardTitle>
+          </CardHeader>
 
-              <h2 className="text-2xl font-bold">
-                {data.transfers_dispatched || 0}
-              </h2>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Branch</p>
+              <p>{data.location_name}</p>
             </div>
 
-            <Truck className="h-8 w-8 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Address</p>
+              <p>{data.location_address}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Phone</p>
+              <p>{data.location_phone}</p>
+            </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Employment Details</CardTitle>
+          </CardHeader>
 
-        <Card className="rounded-2xl">
-          <CardContent className="flex items-center justify-between p-5">
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Salary</p>
+
+              <p>₦{Number(data.salary || 0).toLocaleString()}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Hire Date</p>
+
+              <p>{new Date(data.hired_at).toLocaleDateString()}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Status</p>
+
+              <Badge>{data.is_active ? "Active" : "Inactive"}</Badge>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Summary</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Last Sale</p>
+
+              <p>
+                {data.last_sale_at
+                  ? new Date(data.last_sale_at).toLocaleString()
+                  : "No sales yet"}
+              </p>
+            </div>
+
             <div>
               <p className="text-sm text-muted-foreground">Last Activity</p>
 
-              <h2 className="text-sm font-semibold">
+              <p>
                 {data.last_activity_at
                   ? new Date(data.last_activity_at).toLocaleString()
-                  : "---"}
-              </h2>
+                  : "No activity"}
+              </p>
             </div>
 
-            <Clock className="h-8 w-8 text-primary" />
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl">
-          <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-muted-foreground">Operations Score</p>
+              <p className="text-sm text-muted-foreground">
+                Today's Transactions
+              </p>
 
-              <h2 className="text-2xl font-bold">
-                {data.total_operations || 0}
-              </h2>
+              <p>{data.today_transactions}</p>
             </div>
-
-            <ClipboardList className="h-8 w-8 text-primary" />
           </CardContent>
         </Card>
       </div>
-
-      {/* TABS */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList className="h-auto w-full justify-start rounded-2xl p-2">
-          <TabsTrigger value="overview" className="rounded-xl">
-            Overview
-          </TabsTrigger>
-
-          <TabsTrigger value="activities" className="rounded-xl">
-            Activities
-          </TabsTrigger>
-        </TabsList>
-
-        {/* OVERVIEW */}
-        <TabsContent value="overview">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle>Manager Overview</CardTitle>
-
-              <CardDescription>Operational performance summary</CardDescription>
-            </CardHeader>
-
-            <Separator />
-
-            <CardContent className="space-y-5 pt-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card className="rounded-2xl border-muted">
-                  <CardContent className="space-y-2 p-5">
-                    <p className="text-sm text-muted-foreground">
-                      Operations Managed
-                    </p>
-
-                    <h2 className="text-3xl font-bold">
-                      {data.total_operations || 0}
-                    </h2>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-2xl border-muted">
-                  <CardContent className="space-y-2 p-5">
-                    <p className="text-sm text-muted-foreground">
-                      Total Expenses Recorded
-                    </p>
-
-                    <h2 className="text-3xl font-bold">
-                      ₦
-                      {Number(
-                        data.total_expenses_recorded || 0,
-                      ).toLocaleString()}
-                    </h2>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ACTIVITIES */}
-        <TabsContent value="activities">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle>Recent Activities</CardTitle>
-
-              <CardDescription>Latest operational activities</CardDescription>
-            </CardHeader>
-
-            <Separator />
-
-            <CardContent>
-              {activities.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  No activities found
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-
-                      <TableHead>Activity</TableHead>
-
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {activities.map((activity, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {new Date(activity.created_at).toLocaleDateString()}
-                        </TableCell>
-
-                        <TableCell>{activity.activity}</TableCell>
-
-                        <TableCell>
-                          <Badge>{activity.status}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
