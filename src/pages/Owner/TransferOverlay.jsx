@@ -160,7 +160,7 @@ export default function TransferOverlay({
                             }))
                           }
                         >
-                          <CheckCircle2 className="h-4 h-4" />
+                          <CheckCircle2 className=" h-4" />
                         </Button>
                         <Button
                           size="icon"
@@ -176,7 +176,7 @@ export default function TransferOverlay({
                             }))
                           }
                         >
-                          <XCircle className="h-4 h-4" />
+                          <XCircle className="h-4" />
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -7,45 +7,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Wallet,
-  Truck,
   CheckCircle,
   Inbox,
   Activity,
-  Clock,
   Loader2,
   RefreshCw,
-  UserCog,
-  ClipboardList,
   ShoppingCart,
   TrendingUp,
 } from "lucide-react";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
-
-import { Separator } from "@/components/ui/separator";
-
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import Stats from "@/components/ui/Stats";
 
@@ -63,8 +38,6 @@ export default function ManagerDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   const [refreshing, setRefreshing] = useState(false);
-
-  const [activeTab, setActiveTab] = useState("overview");
 
   /*
   ========================================
@@ -144,13 +117,11 @@ export default function ManagerDetailsPage() {
   ========================================
   */
 
-  const activities = data.activities || [];
-
   return (
     <div className="space-y-5 p-3">
       {/* HEADER */}
       <Card className="rounded-2xl">
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
               <Button
@@ -177,7 +148,7 @@ export default function ManagerDetailsPage() {
                 <div className="mt-1 flex flex-col gap-1 text-sm text-muted-foreground">
                   <span>{data.email || "No email"}</span>
 
-                  <span>{data.location_name}</span>
+                  <span>{data.location_name?.toUpperCase()}</span>
                 </div>
               </div>
             </div>
@@ -202,14 +173,14 @@ export default function ManagerDetailsPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stats
           title="Total Sales"
-          value={`₦${formatCompactNaira(data.total_sales || 0).toLocaleString()}`}
+          value={formatCompactNaira(data.total_sales || 0).toLocaleString()}
           icon={ShoppingCart}
           color="text-green-600"
         />
 
         <Stats
           title="Today's Sales"
-          value={`₦${formatCompactNaira(data.today_sales || 0).toLocaleString()}`}
+          value={formatCompactNaira(data.today_sales || 0).toLocaleString()}
           icon={TrendingUp}
           color="text-emerald-600"
         />
@@ -223,7 +194,7 @@ export default function ManagerDetailsPage() {
 
         <Stats
           title="Average Sale"
-          value={`₦${formatCompactNaira(data.average_sale || 0).toLocaleString()}`}
+          value={formatCompactNaira(data.average_sale || 0).toLocaleString()}
           icon={Wallet}
           color="text-purple-600"
         />
@@ -233,9 +204,9 @@ export default function ManagerDetailsPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stats
           title="Expenses"
-          value={`₦${formatCompactNaira(
+          value={formatCompactNaira(
             data.total_expenses_recorded || 0,
-          ).toLocaleString()}`}
+          ).toLocaleString()}
           icon={Wallet}
           color="text-red-600"
         />
@@ -294,7 +265,7 @@ export default function ManagerDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Salary</p>
 
-              <p>₦{Number(data.salary || 0).toLocaleString()}</p>
+              <p>{formatCompactNaira(data.salary || 0).toLocaleString()}</p>
             </div>
 
             <div>

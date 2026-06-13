@@ -28,6 +28,7 @@ export function useReports(
         else if (view === "week") bucket = "day";
         else if (view === "month") bucket = "day";
         else if (view === "year") bucket = "month";
+        else if (view === "total") bucket = "month";
 
         // 🔹 Parallel requests (faster)
         const [dashboardRes, timelineRes] = await Promise.all([

@@ -12,7 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowRight, Search, Loader2, Image } from "lucide-react";
+import {
+  ArrowRight,
+  Search,
+  Loader2,
+  Image,
+  Wallet,
+  LoaderPinwheelIcon,
+} from "lucide-react";
 
 // ✅ SERVICES
 import {
@@ -144,9 +151,13 @@ export default function OwnerTransfersPage() {
       {/* ✅ STATS */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Stats title="Total" value={stats.total} />
-        <Stats title="Pending" value={stats.pending} color="text-orange-600" />
-        <Stats title="In Transit" value={stats.transit} color="text-blue-600" />
-        <Stats title="Value" value={stats.value} />
+        <Stats title="Pending" value={stats.pending} />
+        <Stats
+          title="In Transit"
+          value={stats.transit}
+          icon={LoaderPinwheelIcon}
+        />
+        <Stats title="Value" value={stats.value} icon={Wallet} />
       </div>
 
       <Card className="border-none">
@@ -220,7 +231,9 @@ export default function OwnerTransfersPage() {
                         <div className="flex -space-x-2">
                           {t.items?.slice(0, 3).map((item, i) => {
                             const product = productMap[item.product_id];
-
+                            {
+                              console.log(product);
+                            }
                             return product?.image_url ? (
                               <img
                                 key={i}

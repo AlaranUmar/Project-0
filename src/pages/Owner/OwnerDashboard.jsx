@@ -56,11 +56,12 @@ export default function OwnerDashboard() {
   }));
 
   const revenueExpenseData = timeline.map((t) => ({
+    period: t.period,
     name: t.period,
     revenue: Number(t.total_sales || 0),
     expense: Number(t.total_expenses || 0),
   }));
-
+  console.log(revenueExpenseData);
   return (
     <div className="p-3 space-y-4">
       <div className="flex justify-between items-center p-3 rounded-lg border bg-card">

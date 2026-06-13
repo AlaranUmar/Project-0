@@ -2,7 +2,7 @@ import React from "react";
 
 function Initials({ name }) {
   return (
-    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">
+    <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
       {getInitials(name)}
     </div>
   );

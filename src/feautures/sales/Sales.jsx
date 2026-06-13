@@ -21,3 +21,23 @@ export function sumSales(sales) {
   if (!sales) return 0;
   return sales.reduce((total, sale) => total + Number(sale.amount || 0), 0);
 }
+
+export async function getSaleDetails(saleId) {
+  const { data, error } = await supabase.rpc("get_sale_details", {
+    p_sale_id: saleId,
+  });
+
+  if (error) throw error;
+
+  return data?.[0] || null;
+}
+
+export async function getSaleItems(saleId) {
+  const { data, error } = await supabase.rpc("get_sale_items", {
+    p_sale_id: saleId,
+  });
+
+  if (error) throw error;
+
+  return data || [];
+}

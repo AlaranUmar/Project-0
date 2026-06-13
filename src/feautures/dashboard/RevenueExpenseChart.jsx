@@ -31,16 +31,13 @@ const getMapKey = (view, dateInstance) => {
   const d = new Date(dateInstance.getTime());
 
   if (view === "today") {
-    // Format safely by Hour bucket: "2026-4-23-14"
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
   }
 
   if (view === "year") {
-    // Format safely by Month bucket: "2026-4"
     return `${d.getFullYear()}-${d.getMonth()}`;
   }
 
-  // Format securely by Day bucket for Week and Month views: "2026-4-23"
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 };
 
@@ -50,7 +47,6 @@ const getMapKey = (view, dateInstance) => {
 const parseToLocalDate = (rawString) => {
   if (!rawString) return new Date();
 
-  // If backend provided a short date string (e.g. "2026-04-23"), extract numbers directly to avoid timezone drift
   if (typeof rawString === "string" && rawString.length <= 10) {
     const parts = rawString.split("-");
     if (parts.length === 3) {
@@ -62,7 +58,6 @@ const parseToLocalDate = (rawString) => {
     }
   }
 
-  // Replace trailing spacing anomalies to create a standard ISO string layout
   const normalizedString =
     typeof rawString === "string" && rawString.includes(" ")
       ? rawString.replace(" ", "T")
@@ -76,26 +71,7 @@ const prepareChartData = (view, rawData) => {
   const now = new Date();
   let skeleton = [];
 
-  // 1. Handle "total" view cleanly by normalizing metrics and sorting raw items directly
-  if (view === "total" || !view) {
-    return [...rawData]
-      .map((d) => {
-        const rawKey = d.period || d.name;
-        const parsedDate = parseToLocalDate(rawKey);
-
-        return {
-          // Convert string timestamps to epoch integers so components render accurately
-          name: isNaN(parsedDate.getTime())
-            ? now.getTime()
-            : parsedDate.getTime(),
-          revenue: Number(d.total_sales || d.revenue || 0),
-          expense: Number(d.total_expenses || d.expense || 0),
-        };
-      })
-      .sort((a, b) => a.name - b.name);
-  }
-
-  // 2. Build out the required chart data template arrays for fixed intervals
+  // 1. Build out the required chart data template arrays for fixed intervals
   switch (view) {
     case "today":
       skeleton = eachHourOfInterval({
@@ -121,9 +97,11 @@ const prepareChartData = (view, rawData) => {
         end: endOfYear(now),
       });
       break;
+    default:
+      return []; // Return empty array if view parameter is missing or unsupported
   }
 
-  // 3. Index your records AND sum them up to capture all transaction spikes
+  // 2. Index your records AND sum them up to capture all transaction spikes
   const indexed = new Map();
   rawData.forEach((d) => {
     const rawKey = d.period || d.name;
@@ -137,7 +115,6 @@ const prepareChartData = (view, rawData) => {
     const rev = Number(d.total_sales || d.revenue || 0);
     const exp = Number(d.total_expenses || d.expense || 0);
 
-    // If bucket already exists, add values together instead of overwriting
     if (indexed.has(stringKey)) {
       const existing = indexed.get(stringKey);
       indexed.set(stringKey, {
@@ -149,7 +126,7 @@ const prepareChartData = (view, rawData) => {
     }
   });
 
-  // 4. Match calendar entries with your data metrics
+  // 3. Match calendar entries with your data metrics
   return skeleton.map((tickDate) => {
     const stringKey = getMapKey(view, tickDate);
     const existingData = indexed.get(stringKey);
@@ -178,7 +155,6 @@ function RevenueExpenseChart({ data = [], view }) {
         return format(date, "MMM d");
       case "year":
         return format(date, "MMM");
-      case "total":
       default:
         return format(date, "MMM d, yyyy");
     }
