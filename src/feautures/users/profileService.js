@@ -10,3 +10,10 @@ export async function getUserProfile(userId) {
   if (error) throw error;
   return data;
 }
+export async function getMyLocation() {
+  const { data, error } = await supabase.rpc("get_my_location");
+
+  if (error) throw error;
+
+  return data?.[0] || null;
+}

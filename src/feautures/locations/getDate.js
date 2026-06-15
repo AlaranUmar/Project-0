@@ -10,11 +10,11 @@ export function getDateRange(range) {
       break;
 
     case "week": {
-      const day = now.getDay();
-      // Adjust to Monday of the current week safely
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      start.setDate(diff);
+      // Look back 6 days from today to get a true 7-day operational view
+      start.setDate(now.getDate() - 6);
       start.setHours(0, 0, 0, 0);
+
+      // End exactly at the current instant
       end.setHours(23, 59, 59, 999);
       break;
     }

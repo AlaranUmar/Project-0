@@ -14,8 +14,6 @@ import {
   startOfToday,
   endOfToday,
   eachHourOfInterval,
-  startOfWeek,
-  endOfWeek,
   eachDayOfInterval,
   startOfYear,
   endOfYear,
@@ -31,14 +29,14 @@ const getMapKey = (view, dateInstance) => {
   const d = new Date(dateInstance.getTime());
 
   if (view === "today") {
-    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}-${d.getHours()}`;
   }
 
   if (view === "year") {
-    return `${d.getFullYear()}-${d.getMonth()}`;
+    return `${d.getFullYear()}-${d.getMonth() + 1}`;
   }
 
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 };
 
 /**
@@ -46,6 +44,24 @@ const getMapKey = (view, dateInstance) => {
  */
 const parseToLocalDate = (rawString) => {
   if (!rawString) return new Date();
+
+  // Handle backend "YYYY-MM-DD HH:mm:ss" formatting
+  if (typeof rawString === "string" && rawString.includes(" ")) {
+    const [datePart, timePart] = rawString.split(" ");
+    const dateParts = datePart.split("-");
+    const timeParts = timePart.split(":");
+
+    if (dateParts.length === 3 && timeParts.length === 3) {
+      return new Date(
+        parseInt(dateParts[0], 10),
+        parseInt(dateParts[1], 10) - 1,
+        parseInt(dateParts[2], 10),
+        parseInt(timeParts[0], 10),
+        parseInt(timeParts[1], 10),
+        parseInt(timeParts[2], 10),
+      );
+    }
+  }
 
   if (typeof rawString === "string" && rawString.length <= 10) {
     const parts = rawString.split("-");
@@ -71,7 +87,7 @@ const prepareChartData = (view, rawData) => {
   const now = new Date();
   let skeleton = [];
 
-  // 1. Build out the required chart data template arrays for fixed intervals
+  // 1. Build out the required chart data template arrays dynamically based on data ranges
   switch (view) {
     case "today":
       skeleton = eachHourOfInterval({
@@ -79,12 +95,17 @@ const prepareChartData = (view, rawData) => {
         end: endOfToday(),
       });
       break;
-    case "week":
+    case "week": {
+      // Dynamic Calculation: Look back exactly 6 days from today to get a true 7-day rolling window
+      const rollingStart = new Date(now.getTime());
+      rollingStart.setDate(now.getDate() - 6);
+
       skeleton = eachDayOfInterval({
-        start: startOfWeek(now, { weekStartsOn: 1 }),
-        end: endOfWeek(now, { weekStartsOn: 1 }),
+        start: rollingStart,
+        end: now,
       });
       break;
+    }
     case "month":
       skeleton = eachDayOfInterval({
         start: new Date(now.getFullYear(), now.getMonth(), 1),
@@ -97,8 +118,22 @@ const prepareChartData = (view, rawData) => {
         end: endOfYear(now),
       });
       break;
-    default:
-      return []; // Return empty array if view parameter is missing or unsupported
+    default: {
+      // For "total" views or custom ranges, extract bounds safely from the data array itself
+      if (!rawData || rawData.length === 0) return [];
+
+      const parsedDates = rawData
+        .map((d) => parseToLocalDate(d.period || d.name))
+        .filter((d) => !isNaN(d.getTime()))
+        .sort((a, b) => a.getTime() - b.getTime());
+
+      if (parsedDates.length === 0) return [];
+
+      skeleton = eachDayOfInterval({
+        start: parsedDates[0],
+        end: parsedDates[parsedDates.length - 1],
+      });
+    }
   }
 
   // 2. Index your records AND sum them up to capture all transaction spikes
@@ -150,7 +185,7 @@ function RevenueExpenseChart({ data = [], view }) {
       case "today":
         return format(date, "ha");
       case "week":
-        return format(date, "EEE");
+        return format(date, "EEE M/d"); // Updated to display "Day Month/Date" layout for better clarity
       case "month":
         return format(date, "MMM d");
       case "year":
@@ -163,18 +198,30 @@ function RevenueExpenseChart({ data = [], view }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="bg-white p-3 rounded-lg shadow-xl border border-slate-100 text-[11px]">
-        <p className="font-bold mb-2 text-slate-500 border-b pb-1">
+      <div className="bg-popover text-popover-foreground p-2.5 rounded-md border border-border shadow-md text-[11px] min-w-[160px] backdrop-blur-sm bg-popover/95 transition-colors duration-200">
+        <p className="font-semibold text-muted-foreground border-b border-border/60 pb-1 mb-1.5">
           {formatXAxis(label)}
         </p>
-        {payload.map((entry, i) => (
-          <div key={i} className="flex justify-between gap-8 mb-1">
-            <span style={{ color: entry.color }} className="font-medium">
-              {entry.name}:
-            </span>
-            <span className="font-bold">{formatCompactNaira(entry.value)}</span>
-          </div>
-        ))}
+
+        <div className="space-y-1">
+          {payload.map((entry, i) => (
+            <div key={i} className="flex justify-between items-center gap-6">
+              <span
+                style={{ color: entry.color }}
+                className="font-medium flex items-center gap-1.5"
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full inline-block shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                {entry.name}
+              </span>
+              <span className="font-bold text-foreground">
+                {formatCompactNaira(entry.value)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };

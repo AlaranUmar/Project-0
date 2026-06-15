@@ -24,11 +24,20 @@ function BranchSalesChart({ data = [] }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload) return null;
     return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs">
-        <p className="font-bold mb-1 text-slate-500">{label}</p>
-        <div className="flex justify-between gap-4">
-          <span className="text-blue-500 font-medium">Total Sales:</span>
-          <span className="font-bold text-slate-900">
+      <div className="bg-popover text-popover-foreground p-2.5 rounded-md border border-border shadow-md text-xs min-w-[150px] backdrop-blur-sm bg-popover/95 transition-colors duration-200">
+        {/* Label/Date Header */}
+        <p className="font-semibold text-[11px] text-muted-foreground mb-1.5">
+          {label}
+        </p>
+
+        {/* Metrics Row */}
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+            {/* Dynamic dot marker matching your app's primary accent color */}
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Total Sales
+          </span>
+          <span className="font-bold text-foreground">
             {formatCompactNaira(payload[0].value)}
           </span>
         </div>

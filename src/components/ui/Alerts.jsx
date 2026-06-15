@@ -131,7 +131,7 @@ function Alerts() {
             </p>
           </div>
         ) : (
-          <ScrollArea className="h-[420px]">
+          <ScrollArea className="h-[400px]">
             <div className="space-y-4">
               {alerts.map((alert) => {
                 const styles =

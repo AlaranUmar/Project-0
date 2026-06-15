@@ -4,16 +4,19 @@ import { supabase } from "@/lib/supabaseClient";
 export function useReports(
   startDate,
   endDate,
-  selectedBranch = "all",
-  view = "day", // today, week, month, year
+  selectedBranch = null,
+  view = "day",
 ) {
   const [summary, setSummary] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [cashierSales, setCashierSales] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!startDate || !endDate) return;
+    // ✅ FIXED GUARD: Allow null (for Owner's global view), but block undefined/unhydrated states (for Manager)
+    if (!startDate || !endDate || selectedBranch === undefined) return;
 
     let isMounted = true;
 
@@ -22,45 +25,73 @@ export function useReports(
       setError(null);
 
       try {
-        // 🔹 Determine bucket dynamically
+        // Determine timeline bucket
         let bucket = "day";
-        if (view === "today") bucket = "hour";
-        else if (view === "week") bucket = "day";
-        else if (view === "month") bucket = "day";
-        else if (view === "year") bucket = "month";
-        else if (view === "total") bucket = "month";
 
-        // 🔹 Parallel requests (faster)
-        const [dashboardRes, timelineRes] = await Promise.all([
+        if (view === "today") {
+          bucket = "hour";
+        } else if (view === "week") {
+          bucket = "day";
+        } else if (view === "month") {
+          bucket = "day";
+        } else if (view === "year") {
+          bucket = "month";
+        } else if (view === "total") {
+          bucket = "month";
+        }
+
+        const [dashboardRes, timelineRes, cashierRes] = await Promise.all([
           supabase.rpc("get_owner_dashboard", {
             p_start_date: startDate,
             p_end_date: endDate,
             p_selected_branch: selectedBranch,
           }),
+
           supabase.rpc("get_sales_timeline", {
             p_start_date: startDate,
             p_end_date: endDate,
             p_bucket: bucket,
-            p_selected_branch: selectedBranch, // 👈 Added matching filter here
+            p_selected_branch: selectedBranch,
+          }),
+
+          supabase.rpc("get_cashiers_sales_ranking", {
+            p_location_id: selectedBranch,
+            p_start_date: startDate,
+            p_end_date: endDate,
           }),
         ]);
 
-        if (dashboardRes.error) throw dashboardRes.error;
-        if (timelineRes.error) throw timelineRes.error;
+        if (dashboardRes.error) {
+          throw dashboardRes.error;
+        }
+
+        if (timelineRes.error) {
+          throw timelineRes.error;
+        }
+
+        if (cashierRes.error) {
+          throw cashierRes.error;
+        }
 
         if (isMounted) {
           setSummary(dashboardRes.data || []);
           setTimeline(timelineRes.data || []);
+          setCashierSales(cashierRes.data || []);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching reports inside hook:", err);
+
         if (isMounted) {
           setError(err);
+
           setSummary([]);
           setTimeline([]);
+          setCashierSales([]);
         }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -71,21 +102,27 @@ export function useReports(
     };
   }, [startDate, endDate, selectedBranch, view]);
 
-  // 🔹 Derived values (lightweight, safe)
   const totals = summary.reduce(
-    (acc, b) => {
-      acc.sales += Number(b.total_sales || 0);
-      acc.expenses += Number(b.total_expenses || 0);
-      acc.profit += Number(b.profit || 0);
-      acc.inventory += Number(b.inventory_value || 0);
+    (acc, branch) => {
+      acc.sales += Number(branch.total_sales || 0);
+      acc.expenses += Number(branch.total_expenses || 0);
+      acc.profit += Number(branch.profit || 0);
+      acc.inventory += Number(branch.inventory_value || 0);
+
       return acc;
     },
-    { sales: 0, expenses: 0, profit: 0, inventory: 0 },
+    {
+      sales: 0,
+      expenses: 0,
+      profit: 0,
+      inventory: 0,
+    },
   );
 
   return {
     summary,
     timeline,
+    cashierSales,
     totals,
     loading,
     error,

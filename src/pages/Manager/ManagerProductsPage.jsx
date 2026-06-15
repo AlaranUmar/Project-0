@@ -109,7 +109,7 @@ function ManagerProductsPage() {
                   </Button>
                 </Link>
               </CardTitle>
-              <div className="flex gap-2 bg-white w-full justify-end">
+              <div className="flex gap-2 w-full justify-end">
                 <div className="mb-4 w-full max-w-sm">
                   <Input
                     placeholder="Search products..."

@@ -12,7 +12,7 @@ import { Package, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import Stats from "@/components/ui/Stats";
 
 export default function OwnerDashboard() {
-  const [dateRange, setDateRange] = useState("month");
+  const [dateRange, setDateRange] = useState("week");
 
   // ✅ Prevent unnecessary recalculation of date strings
   const [startDate, endDate] = useMemo(
@@ -20,11 +20,11 @@ export default function OwnerDashboard() {
     [dateRange],
   );
 
-  // ✅ Fetch data based on calculated date range
+  // ✅ Fetch data based on calculated date range (Owner passes null for branch to get all)
   const { totals, summary, timeline, loading, error } = useReports(
     startDate,
     endDate,
-    "all",
+    null,
     dateRange,
   );
 
@@ -46,8 +46,8 @@ export default function OwnerDashboard() {
     );
   }
 
-  // ⚠️ Empty Data State - Kept inside the dashboard flow to allow range switching
-  const hasData = summary.length > 0 || timeline.length > 0;
+  // ⚠️ Empty Data State - Checked against summary to ensure calendar timelines can still draw axes
+  const hasData = summary.length > 0;
 
   // ✅ Transform data for charts
   const branchSalesData = summary.map((b) => ({
@@ -61,7 +61,7 @@ export default function OwnerDashboard() {
     revenue: Number(t.total_sales || 0),
     expense: Number(t.total_expenses || 0),
   }));
-  console.log(revenueExpenseData);
+
   return (
     <div className="p-3 space-y-4">
       <div className="flex justify-between items-center p-3 rounded-lg border bg-card">
