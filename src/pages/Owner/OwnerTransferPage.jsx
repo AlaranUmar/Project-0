@@ -259,7 +259,7 @@ export default function OwnerTransfersPage() {
                       </TableCell>
 
                       <TableCell className="text-right flex justify-end gap-2">
-                        {!["completed", "rejected"].includes(t.status) && (
+                        {![].includes(t.status) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -294,18 +294,6 @@ export default function OwnerTransfersPage() {
                               ? "Receiving..."
                               : "Receive"}
                           </Button>
-                        )}
-
-                        {t.status === "completed" && (
-                          <span className="text-xs text-green-600 font-bold">
-                            Completed
-                          </span>
-                        )}
-
-                        {t.status === "rejected" && (
-                          <span className="text-xs text-red-600 font-bold">
-                            Rejected
-                          </span>
                         )}
                       </TableCell>
                     </TableRow>
