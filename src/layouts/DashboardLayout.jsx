@@ -8,10 +8,12 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
 import { logoutUser } from "@/feautures/auth/authService";
+import { getUnreadNotificationCount } from "@/feautures/notifications/notificationService";
 
 function DashboardLayout() {
   const { user, role } = useAuth();
   const [page, setPage] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(null);
 
   const [isDark, setIsDark] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -29,6 +31,15 @@ function DashboardLayout() {
       localStorage.setItem("theme", "light");
     }
   }, [isDark]);
+  useEffect(() => {
+    const getNotificationCount = async () => {
+      const data = await getUnreadNotificationCount();
+      setNotificationCount(data);
+      // You can use this data to update a state or context if needed
+    };
+
+    getNotificationCount();
+  }, []);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -38,7 +49,6 @@ function DashboardLayout() {
     <TooltipProvider delayDuration={0}>
       <SidebarProvider>
         <div className="flex h-screen w-full bg-background text-foreground transition-colors duration-300 overflow-hidden">
-          {/* Sidebar */}
           <AppSidebar username={user?.email} role={role} setPage={setPage} />
 
           {/* Main Content Wrapper */}
@@ -68,8 +78,17 @@ function DashboardLayout() {
                 </Button>
 
                 <Link to="notifications">
-                  <Button variant="ghost" size="icon" className="text-warning">
-                    <Bell className="size-5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-warning relative active:border-0"
+                  >
+                    <Bell className="size-5 " />
+                    {notificationCount !== null && (
+                      <span className="absolute -top-1 -right-1 flex px-1 items-center justify-center rounded-full text-xs bg-warning text-white dark:text-black">
+                        {notificationCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
 

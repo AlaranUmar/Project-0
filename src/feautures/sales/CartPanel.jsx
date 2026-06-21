@@ -12,6 +12,7 @@ import {
   CreditCard,
   Send,
 } from "lucide-react";
+
 import {
   Select,
   SelectContent,
@@ -19,27 +20,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { checkoutCart } from "./checkoutService";
 import { useState, useMemo, useEffect } from "react";
 
 function CartPanel({ profile, staff }) {
   const [loading, setLoading] = useState(false);
-  const { cart, increase, decrease, remove, total, clearCart } = useCart();
-  const [payments, setPayments] = useState([{ method: "cash", amount: 0 }]);
 
-  // Performance: Only re-calculate when payments array changes
+  const {
+    cart,
+    heldCarts,
+
+    increase,
+    decrease,
+    setQuantity,
+    remove,
+
+    total,
+    totalUnits,
+
+    clearCart,
+    holdCart,
+    loadHeldCart,
+    deleteHeldCart,
+  } = useCart();
+
+  const [payments, setPayments] = useState([
+    {
+      method: "cash",
+      amount: 0,
+    },
+  ]);
+
+  const [holdName, setHoldName] = useState("");
+
+  const [cartSearch, setCartSearch] = useState("");
+
+  const filteredCart = useMemo(() => {
+    if (!cartSearch) return cart;
+
+    return cart.filter((item) =>
+      item.name?.toLowerCase().includes(cartSearch.toLowerCase()),
+    );
+  }, [cart, cartSearch]);
+
   const paidTotal = useMemo(() => {
     return payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
   }, [payments]);
 
-  // SPEED IMPROVEMENT: Auto-update the amount if there is only one payment method
   useEffect(() => {
     if (payments.length === 1 && cart.length > 0) {
-      setPayments([{ ...payments[0], amount: total }]);
+      setPayments([
+        {
+          ...payments[0],
+          amount: total,
+        },
+      ]);
     }
   }, [total, cart.length, payments.length]);
 
-  // SPEED IMPROVEMENT: Handle "Enter" key for fast checkout
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
@@ -51,30 +90,56 @@ function CartPanel({ profile, staff }) {
         handleCheckout();
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
+
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [paidTotal, total, loading, cart]);
 
   function updatePayment(index, field, value) {
     const copy = [...payments];
+
     if (field === "amount") {
       copy[index][field] = value === "" ? "" : Number(value);
     } else {
       copy[index][field] = value;
     }
+
     setPayments(copy);
   }
 
-  // SPEED IMPROVEMENT: One-click "Quick Pay" for full amounts
   function quickPay(method) {
-    setPayments([{ method, amount: total }]);
+    setPayments([
+      {
+        method,
+        amount: total,
+      },
+    ]);
   }
 
   function addPayment() {
     const remaining = total - paidTotal;
+
+    // 1. List all your available payment options
+    const allMethods = ["cash", "pos", "transfer"];
+
+    // 2. Find which methods have already been added to the state
+    const existingMethods = payments.map((p) => p.method);
+
+    // 3. Find the first method that is NOT in the existing list
+    const nextAvailableMethod = allMethods.find(
+      (method) => !existingMethods.includes(method),
+    );
+
+    // 4. If all methods are already added, stop running the function
+    if (!nextAvailableMethod) return;
+
     setPayments([
       ...payments,
-      { method: "transfer", amount: remaining > 0 ? remaining : 0 },
+      {
+        method: nextAvailableMethod, // Adds the new unique method automatically
+        amount: remaining > 0 ? remaining : 0,
+      },
     ]);
   }
 
@@ -82,58 +147,175 @@ function CartPanel({ profile, staff }) {
     setPayments(payments.filter((_, i) => i !== index));
   }
 
+  function removePayment(index) {
+    setPayments(payments.filter((_, i) => i !== index));
+  }
   async function handleCheckout() {
     if (!staff?.location_id) return alert("Staff location not found.");
+
     if (Math.abs(paidTotal - total) > 0.01) {
       alert(
-        `Payment mismatch. Paid: ₦${paidTotal.toFixed(2)} vs Total: ₦${total.toFixed(2)}`,
+        `Payment mismatch. Paid: ₦${paidTotal.toFixed(
+          2,
+        )} vs Total: ₦${total.toFixed(2)}`,
       );
       return;
     }
 
     setLoading(true);
+
     try {
       const finalPayments = payments.map((p) => ({
         ...p,
         amount: Number(p.amount) || 0,
       }));
-      const sale = await checkoutCart(
-        cart,
-        finalPayments,
-        profile,
-        staff.location_id,
-      );
+
+      await checkoutCart(cart, finalPayments, profile, staff.location_id);
+
       clearCart();
-      setPayments([{ method: "cash", amount: 0 }]);
+
+      setPayments([
+        {
+          method: "cash",
+          amount: 0,
+        },
+      ]);
+
       alert("Checkout successful!");
     } catch (err) {
       alert(err.message);
     }
+
     setLoading(false);
   }
 
   return (
-    <Card className="flex flex-col md:col-span-4">
-      <CardHeader>
-        <CardTitle>Cart</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-5 flex-1">
-        {/* CART ITEMS */}
-        <ScrollArea className="h-52">
-          {cart.length === 0 && (
+    <Card className="ring-0 shadow-none">
+      <CardContent className="space-y-4">
+        <Input
+          placeholder="Search cart..."
+          value={cartSearch}
+          onChange={(e) => setCartSearch(e.target.value)}
+        />
+
+        <div className="grid grid-cols-3 gap-2">
+          <Card>
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">Products</p>
+
+              <p className="font-bold">{cart.length}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">Units</p>
+
+              <p className="font-bold">{totalUnits}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">Total</p>
+
+              <p className="font-bold">₦{total.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="border rounded-lg p-3 space-y-2">
+          <p className="font-semibold">Hold Cart</p>
+
+          <Input
+            placeholder="Customer Name"
+            value={holdName}
+            onChange={(e) => setHoldName(e.target.value)}
+          />
+
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={cart.length === 0}
+            onClick={() => {
+              holdCart(holdName);
+              setHoldName("");
+            }}
+          >
+            Hold Current Cart
+          </Button>
+        </div>
+
+        {heldCarts.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Held Carts ({heldCarts.length})</CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-2">
+              {heldCarts.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex justify-between items-center border rounded-lg p-2"
+                >
+                  <div>
+                    <p className="font-medium">{c.name}</p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {c.items.length} products
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => loadHeldCart(c.id)}>
+                      Resume
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteHeldCart(c.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        <ScrollArea className="h-72 border rounded-lg p-2">
+          {filteredCart.length === 0 && (
             <p className="text-sm text-muted-foreground">No items added</p>
           )}
-          {cart.map((item) => (
+
+          {filteredCart.map((item) => (
             <div
               key={item.id}
-              className="flex justify-between items-center border-b pb-2 py-2"
+              className="flex justify-between items-center border-b py-2"
             >
               <div>
-                <p className="w-40 text-nowrap overflow-hidden text-ellipsis text-sm font-medium">
+                <img
+                  src={item?.image_url}
+                  alt={item.name}
+                  className="w-10 h-10 rounded-lg border object-cover"
+                />
+                <p
+                  className="font-medium text-sm line-clamp-2 max-w-[150px] md:max-w-[250px]"
+                  title={item.name}
+                >
                   {item.name}
                 </p>
-                <p className="text-xs text-muted-foreground">₦{item.price}</p>
+
+                <p className="text-xs text-muted-foreground">
+                  ₦{item.price.toLocaleString()} × {item.quantity}
+                </p>
+
+                <p className="font-semibold text-sm">
+                  ₦{(item.price * item.quantity).toLocaleString()}
+                </p>
               </div>
+
               <div className="flex items-center gap-1">
                 <Button
                   size="icon"
@@ -142,7 +324,17 @@ function CartPanel({ profile, staff }) {
                 >
                   <Minus size={14} />
                 </Button>
-                <span className="w-6 text-center">{item.quantity}</span>
+
+                <Input
+                  type="number"
+                  min={1}
+                  value={item.quantity}
+                  className="w-16 text-center"
+                  onChange={(e) =>
+                    setQuantity(item.id, Number(e.target.value) || 1)
+                  }
+                />
+
                 <Button
                   size="icon"
                   variant="outline"
@@ -150,6 +342,7 @@ function CartPanel({ profile, staff }) {
                 >
                   <Plus size={14} />
                 </Button>
+
                 <Button
                   size="icon"
                   variant="ghost"
@@ -162,107 +355,99 @@ function CartPanel({ profile, staff }) {
           ))}
         </ScrollArea>
 
-        <div className="flex justify-between font-bold text-lg">
-          <span>Total</span>
-          <span>₦{total.toFixed(2)}</span>
-        </div>
-
-        {/* SPEED IMPROVEMENT: QUICK PAY BUTTONS */}
         <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => quickPay("cash")}
-            disabled={cart.length === 0}
-          >
-            <Banknote className="mr-1 h-4 w-4" /> Cash
+          <Button variant="secondary" onClick={() => quickPay("cash")}>
+            <Banknote className="mr-1 h-4 w-4" />
+            Cash
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => quickPay("pos")}
-            disabled={cart.length === 0}
-          >
-            <CreditCard className="mr-1 h-4 w-4" /> POS
+
+          <Button variant="secondary" onClick={() => quickPay("pos")}>
+            <CreditCard className="mr-1 h-4 w-4" />
+            POS
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => quickPay("transfer")}
-            disabled={cart.length === 0}
-          >
-            <Send className="mr-1 h-4 w-4" /> Trans
+
+          <Button variant="secondary" onClick={() => quickPay("transfer")}>
+            <Send className="mr-1 h-4 w-4" />
+            Transfer
           </Button>
         </div>
 
-        {/* PAYMENTS */}
-        <div className="flex flex-col gap-3 border-t pt-3">
+        <div className="space-y-3">
           {payments.map((payment, index) => (
-            <div key={index} className="flex gap-2">
+            <div key={index} className="flex gap-2 items-center mb-2">
               <Select
                 value={payment.method}
                 onValueChange={(value) => updatePayment(index, "method", value)}
               >
-                <SelectTrigger className="border rounded p-2 text-sm w-[180px]">
-                  <SelectValue placeholder="Select method" />
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
                 </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="pos">POS</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem
+                    value="cash"
+                    disabled={payments.some(
+                      (p, i) => p.method === "cash" && i !== index,
+                    )}
+                  >
+                    Cash
+                  </SelectItem>
+                  <SelectItem
+                    value="pos"
+                    disabled={payments.some(
+                      (p, i) => p.method === "pos" && i !== index,
+                    )}
+                  >
+                    POS
+                  </SelectItem>
+                  <SelectItem
+                    value="transfer"
+                    disabled={payments.some(
+                      (p, i) => p.method === "transfer" && i !== index,
+                    )}
+                  >
+                    Transfer
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
               <Input
                 type="number"
-                placeholder="Amount"
                 value={payment.amount}
-                onFocus={(e) => e.target.select()} // Auto-select text on click for faster editing
                 onChange={(e) => updatePayment(index, "amount", e.target.value)}
               />
-              {payments.length > 1 && (
-                <Button variant="ghost" onClick={() => removePayment(index)}>
-                  ✕
-                </Button>
-              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive shrink-0"
+                onClick={() => removePayment(index)}
+              >
+                ✕
+              </Button>
             </div>
           ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addPayment}
-            disabled={cart.length === 0}
-          >
+
+          <Button variant="outline" onClick={addPayment}>
             + Split Payment
           </Button>
-          <div className="flex justify-between text-xs text-muted-foreground uppercase font-bold">
-            <span>Paid: ₦{paidTotal.toFixed(2)}</span>
-            <span
-              className={
-                Math.abs(paidTotal - total) < 0.01
-                  ? "text-green-600"
-                  : "text-red-500"
-              }
-            >
-              {Math.abs(paidTotal - total) < 0.01
-                ? "Ready"
-                : `Diff: ₦${(total - paidTotal).toFixed(2)}`}
-            </span>
+
+          <div className="flex justify-between text-sm font-medium">
+            <span>Paid: ₦{paidTotal.toLocaleString()}</span>
+
+            <span>Balance: ₦{(total - paidTotal).toLocaleString()}</span>
           </div>
         </div>
 
         <Button
-          onClick={handleCheckout}
-          className="w-full h-12 text-lg font-bold"
+          className="w-full h-12 text-lg"
           disabled={
             loading || cart.length === 0 || Math.abs(paidTotal - total) > 0.01
           }
+          onClick={handleCheckout}
         >
-          {loading ? (
-            <Loader className="animate-spin" />
-          ) : (
-            "Complete Sale (Enter)"
-          )}
+          {loading ? <Loader className="animate-spin" /> : "Complete Sale"}
         </Button>
       </CardContent>
     </Card>

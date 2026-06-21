@@ -20,9 +20,6 @@ export const sidebarMenu = {
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
     { name: "Notifications", path: "/notifications", icon: Bell },
-    // { name: "Customers", path: "/customers", icon: Users },
-    { name: "Reports", path: "/reports", icon: BarChart3 },
-    // { name: "Settings", path: "/settings", icon: Settings },
   ],
   admin: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -31,9 +28,6 @@ export const sidebarMenu = {
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Transfers", path: "/transfers", icon: Bus },
-    // { name: "Customers", path: "/customers", icon: Users },
-    { name: "Reports", path: "/reports", icon: BarChart3 },
-    // { name: "Settings", path: "/settings", icon: Settings },
   ],
 
   manager: [
@@ -43,13 +37,12 @@ export const sidebarMenu = {
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Staffs", path: "/staffs", icon: User2 },
     { name: "Transfers", path: "/transfers", icon: Bus },
-    { name: "Reports", path: "/reports", icon: BarChart3 },
     { name: "Notifications", path: "/notifications", icon: Bell },
   ],
 
   cashier: [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "Products-sale", path: "/products-sale", icon: Package },
+    { name: "Products-sale", path: "/products-sale", icon: Scale },
     { name: "Sales", path: "/sales", icon: ShoppingCart },
     { name: "Notifications", path: "/notifications", icon: Bell },
   ],
