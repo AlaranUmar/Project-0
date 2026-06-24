@@ -21,7 +21,6 @@ function AppSidebar({ username, role, setPage }) {
 
   const navItems = useMemo(() => sidebarMenu?.[role] ?? [], [role]);
 
-  // Keep page title logic separate from menu highlight logic
   useEffect(() => {
     const currentItem = navItems.find(
       (item) =>

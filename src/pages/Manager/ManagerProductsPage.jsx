@@ -31,6 +31,8 @@ import { getSales } from "@/feautures/sales/Sales";
 import { Link } from "react-router-dom";
 import Stats from "@/components/ui/Stats";
 import { formatCompactNaira } from "@/utils/formatting";
+import { Tooltip } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -71,7 +73,7 @@ function ManagerProductsPage() {
         return prod.inventory.map((inv) => ({
           product_id: prod.id,
           product_name: prod.name,
-          image_url: prod.image_url, // add this
+          image_url: prod.image_url,
           price: prod.price || 0,
           reorder_level: prod.reorder_level || 0,
           category_name: categoryName,
@@ -132,47 +134,47 @@ function ManagerProductsPage() {
   ];
 
   const filteredProducts = useMemo(() => {
-    let data = [...products];
+    const q = query?.toLowerCase().trim();
 
-    if (query) {
-      const q = query.toLowerCase();
+    const filtered = products.filter((p) => {
+      if (categoryFilter !== "all" && p.category_name !== categoryFilter) {
+        return false;
+      }
 
-      data = data.filter(
-        (p) =>
-          p.product_name?.toLowerCase().includes(q) ||
-          p.category_name?.toLowerCase().includes(q) ||
-          p.tags?.join(" ")?.toLowerCase().includes(q),
-      );
-    }
+      if (statusFilter !== "all") {
+        const isOut = p.stock_quantity <= 0;
+        const isLow =
+          p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level;
+        const isInStock = p.stock_quantity > p.reorder_level;
 
-    if (categoryFilter !== "all") {
-      data = data.filter((p) => p.category_name === categoryFilter);
-    }
+        if (statusFilter === "instock" && !isInStock) return false;
+        if (statusFilter === "low" && !isLow) return false;
+        if (statusFilter === "out" && !isOut) return false;
+      }
 
-    if (statusFilter !== "all") {
-      data = data.filter((p) => {
-        if (statusFilter === "instock")
-          return p.stock_quantity > p.reorder_level;
+      if (q) {
+        const matchesName = p.product_name?.toLowerCase().includes(q);
+        const matchesCategory = p.category_name?.toLowerCase().includes(q);
+        const matchesTags = p.tags?.some((tag) =>
+          tag.toLowerCase().includes(q),
+        );
 
-        if (statusFilter === "low")
-          return p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level;
+        if (!matchesName && !matchesCategory && !matchesTags) return false;
+      }
 
-        if (statusFilter === "out") return p.stock_quantity <= 0;
+      return true;
+    });
 
-        return true;
-      });
-    }
+    const getPriority = (product) => {
+      if (product.stock_quantity <= 0) return 2;
+      if (product.stock_quantity <= product.reorder_level) return 1;
+      return 0;
+    };
 
-    return data.sort((a, b) => {
-      const getPriority = (product) => {
-        if (product.stock_quantity <= 0) return 0;
-
-        if (product.stock_quantity <= product.reorder_level) return 1;
-
-        return 2;
-      };
-
-      return getPriority(a) - getPriority(b);
+    return filtered.sort((a, b) => {
+      const priorityDiff = getPriority(a) - getPriority(b);
+      if (priorityDiff !== 0) return priorityDiff;
+      return b.stock_quantity - a.stock_quantity;
     });
   }, [products, query, statusFilter, categoryFilter]);
 
@@ -182,6 +184,16 @@ function ManagerProductsPage() {
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE,
   );
+
+  const handleExport = () => {
+    const selectedData = products.filter((p) =>
+      selectedProducts.includes(`${p.product_id}`),
+    );
+    const jsonData = JSON.stringify(selectedData, null, 2);
+    navigator.clipboard.writeText(jsonData).then(() => {
+      toast.success("Selected products copied to clipboard as JSON!");
+    });
+  };
 
   const toggleProduct = (id) => {
     setSelectedProducts((prev) =>
@@ -276,11 +288,7 @@ function ManagerProductsPage() {
             <div className="flex gap-2 mt-3">
               <Badge>{selectedProducts.length} selected</Badge>
 
-              <Button variant="outline" size="sm">
-                Transfer
-              </Button>
-
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExport}>
                 Export
               </Button>
             </div>
@@ -330,7 +338,7 @@ function ManagerProductsPage() {
                       </TableCell>
 
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
                           <img
                             src={product.image_url}
                             alt={product.product_name}
@@ -339,7 +347,7 @@ function ManagerProductsPage() {
 
                           <div>
                             <p
-                              className="font-medium truncate max-w-xs"
+                              className="font-medium truncate max-w-[200px]"
                               title={product.product_name}
                             >
                               {product.product_name}

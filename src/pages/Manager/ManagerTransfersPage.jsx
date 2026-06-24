@@ -24,6 +24,7 @@ import {
 import RequestTransferModal from "@/feautures/transfer/RequestTransferModal";
 import { getStaff } from "@/feautures/staff/staffService";
 import { getProducts } from "@/feautures/products/productService";
+import Stats from "@/components/ui/Stats";
 
 export default function ManagerTransfersPage({ profile }) {
   const [transfers, setTransfers] = useState([]);
@@ -128,22 +129,10 @@ export default function ManagerTransfersPage({ profile }) {
     <div className="p-4 space-y-4">
       {/* Stats Section */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <StatCard label="My Transfers" value={stats.total} />
-        <StatCard
-          label="Pending"
-          value={stats.pending}
-          color="text-orange-600"
-        />
-        <StatCard
-          label="In Transit"
-          value={stats.transit}
-          color="text-blue-600"
-        />
-        <StatCard
-          label="Completed"
-          value={stats.completed}
-          color="text-green-600"
-        />
+        <Stats title="My Transfers" value={stats.total} />
+        <Stats title="Pending" value={stats.pending} />
+        <Stats title="In Transit" value={stats.transit} />
+        <Stats title="Completed" value={stats.completed} />
       </div>
 
       <Card className="border-none shadow-sm">
@@ -179,7 +168,7 @@ export default function ManagerTransfersPage({ profile }) {
 
           <div className="rounded-md border overflow-hidden">
             <Table>
-              <TableHeader className="bg-slate-50">
+              <TableHeader className="">
                 <TableRow>
                   <TableHead>Route</TableHead>
                   <TableHead>Status</TableHead>
@@ -228,17 +217,23 @@ export default function ManagerTransfersPage({ profile }) {
                             const p = products.find(
                               (prod) => prod.id === item.product_id,
                             );
-                            return (
+                            return p?.image_url ? (
                               <img
                                 key={i}
                                 src={p?.image_url}
-                                className="w-7 h-7 rounded-full border-2 border-white object-cover bg-slate-100"
-                                title={p?.name}
+                                className="w-7 h-7 rounded-full border bg-white"
                               />
+                            ) : (
+                              <div
+                                key={i}
+                                className="w-7 h-7 rounded-full border bg-slate-200 flex items-center justify-center"
+                              >
+                                <Image className="w-4 h-4 text-slate-500" />
+                              </div>
                             );
                           })}
                           {t.items?.length > 3 && (
-                            <div className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[9px] font-bold">
+                            <div className="w-7 h-7 rounded-full bg-secondary border-2  flex items-center justify-center text-[9px] font-bold">
                               +{t.items.length - 3}
                             </div>
                           )}
@@ -297,13 +292,13 @@ export default function ManagerTransfersPage({ profile }) {
   );
 }
 
-function StatCard({ label, value, color = "" }) {
-  return (
-    <Card className="p-4 flex flex-col gap-1">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase">
-        {label}
-      </p>
-      <p className={`text-xl font-black ${color}`}>{value}</p>
-    </Card>
-  );
-}
+// function Stats({ label, value, color = "" }) {
+//   return (
+//     <Card className="p-4 flex flex-col gap-1">
+//       <p className="text-[10px] font-bold text-muted-foreground uppercase">
+//         {label}
+//       </p>
+//       <p className={`text-xl font-black ${color}`}>{value}</p>
+//     </Card>
+//   );
+// }

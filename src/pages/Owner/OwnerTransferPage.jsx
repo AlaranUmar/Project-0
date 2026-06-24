@@ -230,14 +230,13 @@ export default function OwnerTransfersPage() {
                       <TableCell>
                         <div className="flex -space-x-2">
                           {t.items?.slice(0, 3).map((item, i) => {
-                            const product = productMap[item.product_id];
-                            {
-                              console.log(product);
-                            }
-                            return product?.image_url ? (
+                            const p = products.find(
+                              (prod) => prod.id === item.product_id,
+                            );
+                            return p?.image_url ? (
                               <img
                                 key={i}
-                                src={product?.image_url}
+                                src={p?.image_url}
                                 className="w-7 h-7 rounded-full border bg-white"
                               />
                             ) : (
@@ -249,6 +248,11 @@ export default function OwnerTransfersPage() {
                               </div>
                             );
                           })}
+                          {t.items?.length > 3 && (
+                            <div className="w-7 h-7 rounded-full bg-secondary border-2  flex items-center justify-center text-[9px] font-bold">
+                              +{t.items.length - 3}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
 

@@ -5,10 +5,8 @@ import ManagerStaffsPage from "../Manager/ManagerStaffsPage";
 export default function StaffsPage() {
   const { role } = useAuth();
 
-  if (role === "owner") return <OwnerStaffPage />;
-  //   if (role === "admin") return <AdminProductsPage />;
+  if (role === "owner" || role === "admin") return <OwnerStaffPage />;
   if (role === "manager") return <ManagerStaffsPage />;
-  //   if (role === "cashier") return <CashierProductsPage profile={profile} />;
 
   return null;
 }

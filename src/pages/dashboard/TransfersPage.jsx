@@ -11,8 +11,7 @@ export default function TransfersPage() {
         <Loader />
       </div>
     );
-  if (role === "owner") return <OwnerTransfersPage />;
-  //   if (role === "admin") return <AdminProductsPage />;
+  if (role === "owner" || role === "admin") return <OwnerTransfersPage />;
   if (role === "manager") return <ManagerTransfersPage profile={profile} />;
 
   return null;

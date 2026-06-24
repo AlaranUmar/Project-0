@@ -15,7 +15,6 @@ export function useReports(
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // ✅ FIXED GUARD: Allow null (for Owner's global view), but block undefined/unhydrated states (for Manager)
     if (!startDate || !endDate || selectedBranch === undefined) return;
 
     let isMounted = true;
@@ -38,6 +37,14 @@ export function useReports(
           bucket = "month";
         } else if (view === "total") {
           bucket = "month";
+        } else if (view === "custom") {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+          if (diffDays <= 1) bucket = "hour";
+          else if (diffDays > 90) bucket = "month";
+          else bucket = "day";
         }
 
         const [dashboardRes, timelineRes, cashierRes] = await Promise.all([
@@ -61,17 +68,9 @@ export function useReports(
           }),
         ]);
 
-        if (dashboardRes.error) {
-          throw dashboardRes.error;
-        }
-
-        if (timelineRes.error) {
-          throw timelineRes.error;
-        }
-
-        if (cashierRes.error) {
-          throw cashierRes.error;
-        }
+        if (dashboardRes.error) throw dashboardRes.error;
+        if (timelineRes.error) throw timelineRes.error;
+        if (cashierRes.error) throw cashierRes.error;
 
         if (isMounted) {
           setSummary(dashboardRes.data || []);
@@ -83,7 +82,6 @@ export function useReports(
 
         if (isMounted) {
           setError(err);
-
           setSummary([]);
           setTimeline([]);
           setCashierSales([]);
@@ -111,12 +109,7 @@ export function useReports(
 
       return acc;
     },
-    {
-      sales: 0,
-      expenses: 0,
-      profit: 0,
-      inventory: 0,
-    },
+    { sales: 0, expenses: 0, profit: 0, inventory: 0 },
   );
 
   return {
