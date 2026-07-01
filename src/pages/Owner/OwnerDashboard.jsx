@@ -10,6 +10,7 @@ import { DateRangeSelector } from "@/feautures/dashboard/Selectors";
 import { formatCompactNaira } from "@/utils/formatting";
 import { Package, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import Stats from "@/components/ui/Stats";
+import CashierSalesChart from "@/feautures/dashboard/CashierSalesChart";
 
 export default function OwnerDashboard() {
   const [dateRange, setDateRange] = useState("week");
@@ -21,12 +22,8 @@ export default function OwnerDashboard() {
   );
 
   // ✅ Fetch data based on calculated date range (Owner passes null for branch to get all)
-  const { totals, summary, timeline, loading, error } = useReports(
-    startDate,
-    endDate,
-    null,
-    dateRange,
-  );
+  const { totals, summary, timeline, loading, error, cashierSales } =
+    useReports(startDate, endDate, null, dateRange);
 
   // 🔴 Loading State
   if (loading) {
@@ -61,7 +58,15 @@ export default function OwnerDashboard() {
     revenue: Number(t.total_sales || 0),
     expense: Number(t.total_expenses || 0),
   }));
-
+  const CashierSalesData = cashierSales.map((c) => ({
+    cashier: c.cashier_name,
+    name: c.cashier_name,
+    sales: Number(c.total_sales || 0),
+    transactions: Number(c.transaction_count || 0),
+    items: Number(c.total_items || 0),
+    averageSale: Number(c.average_sale || 0),
+  }));
+  console.log(CashierSalesData, cashierSales);
   return (
     <div className="p-3 space-y-4">
       <div className="flex justify-between items-center p-3 rounded-lg border bg-card">
@@ -137,6 +142,16 @@ export default function OwnerDashboard() {
                 </div>
               </CardContent>
             </Card>
+            {/* <Card className="md:col-span-3 w-full">
+              <CardHeader>
+                <CardTitle className="text-base">Cashier Performance</CardTitle>
+              </CardHeader>
+              <CardContent className="px-0 pr-4">
+                <div className="w-full h-72">
+                  <CashierSalesChart data={CashierSalesData} />
+                </div>
+              </CardContent>
+            </Card> */}
 
             <div className="col-span-1 md:col-span-3">
               <RecentStockMovement />

@@ -14,8 +14,8 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 1. Initialize session on mount and listen to auth changes
   useEffect(() => {
-    // Initialize session on mount
     async function initAuth() {
       try {
         const { data } = await supabase.auth.getSession();
@@ -31,7 +31,6 @@ export function AuthProvider({ children }) {
 
     initAuth();
 
-    // Listen for auth changes (login, logout, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -48,35 +47,59 @@ export function AuthProvider({ children }) {
     return () => listener?.subscription?.unsubscribe();
   }, []);
 
+  // 2. Fetch profile data and handle authorization
   useEffect(() => {
+    let isMounted = true;
+
     async function getRole() {
-      if (!user) return;
+      // If there is no user logged in, clear profile states and exit
+      if (!user?.id) {
+        if (isMounted) {
+          setRole(null);
+          setProfile(null);
+        }
+        return;
+      }
+
+      // Guard: Skip API call if profile is already loaded for this exact user
+      if (profile?.id === user.id) return;
 
       try {
         setLoading(true);
         const userProfile = await getUserProfile(user.id);
 
-        // Security Guard: Prevent customers from accessing admin/dashboard areas
+        if (!isMounted) return;
+
+        // Security Guard: Prevent customers from accessing dashboard areas
         if (userProfile?.user_role === "customer") {
-          await logoutUser();
           setRole(null);
           setProfile(null);
           toast.error("Access Denied: Customers cannot access this dashboard.");
+          await logoutUser();
           return;
         }
 
         setRole(userProfile?.user_role);
         setProfile(userProfile);
       } catch (error) {
-        toast.error("Failed to load user profile");
-        console.error(error);
+        if (isMounted) {
+          toast.error("Failed to load user profile");
+          console.error(error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     getRole();
-  }, [user]);
+
+    return () => {
+      isMounted = false;
+    };
+    // Track user.id and profile.id primitives to prevent re-running on reference updates
+  }, [user?.id, profile?.id]);
 
   const value = {
     user,

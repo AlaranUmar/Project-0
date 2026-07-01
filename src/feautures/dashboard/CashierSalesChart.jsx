@@ -29,8 +29,8 @@ function CashierSalesChart({ data = [] }) {
 
     return (
       // Uses Shadcn semantic dark mode classes (bg-popover, border-border, text-popover-foreground)
-      <div className="bg-popover text-popover-foreground p-3 rounded-xl shadow-xl border border-border text-xs min-w-[220px] backdrop-blur-sm ">
-        <p className="font-semibold mb-2 text-muted-foreground">{label}</p>
+      <div className="bg-popover text-popover-foreground p-3 rounded-xl shadow-xl border border-border text-xs min-w-[220px] backdrop-blur-sm">
+        <p className="font-bold mb-2 text-success text-center">{label}</p>
 
         <div className="space-y-1.5">
           <div className="flex justify-between items-center gap-4">
@@ -66,7 +66,6 @@ function CashierSalesChart({ data = [] }) {
       </div>
     );
   };
-
   if (!formattedData.length) {
     return (
       <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
@@ -76,7 +75,7 @@ function CashierSalesChart({ data = [] }) {
   }
 
   return (
-    <div className="h-full w-full min-h-[260px] ml-6">
+    <div className="h-full w-full min-h-[260px] ml-3 mr-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={formattedData}
@@ -105,7 +104,7 @@ function CashierSalesChart({ data = [] }) {
           />
 
           <XAxis
-            dataKey="branch" // Fixed key binding typo to prevent layout breaks
+            dataKey="cashier"
             axisLine={false}
             tickLine={false}
             tick={{

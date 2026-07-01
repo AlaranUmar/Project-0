@@ -33,7 +33,7 @@ export function DateRangeSelector({ value, onChange }) {
     { value: "today", label: "Today" },
     { value: "week", label: "This Week" },
     { value: "month", label: "This Month" },
-    { value: "custom", label: "Custom Range" },
+    { value: "custom", label: "This Year" },
   ];
 
   return <CustomSelect value={value} onChange={onChange} options={options} />;

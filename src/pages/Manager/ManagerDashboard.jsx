@@ -64,7 +64,6 @@ function ManagerDashboard() {
     cashierSales,
     loading: reportsLoading,
   } = useReports(startDate, endDate, LocationId, dateRange);
-  console.log(timeline, cashierSales);
 
   const revenueExpenseData = timeline.map((t) => ({
     period: t.period,
@@ -164,6 +163,7 @@ function ManagerDashboard() {
             <CardContent className="px-0 pr-8">
               <div className="w-full h-64">
                 <CashierSalesChart data={CashierSalesData} />
+                {console.log(CashierSalesData)}
               </div>
             </CardContent>
           </Card>
